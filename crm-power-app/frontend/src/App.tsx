@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider as FluentProvider } from '@fluentui/react';
+import { FluentProvider } from '@fluentui/react';
 import { initializeIcons } from '@fluentui/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Dashboard from './components/Dashboard/Dashboard';
