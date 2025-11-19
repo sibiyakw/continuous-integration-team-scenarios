@@ -158,7 +158,7 @@ export class AnalyticsService {
           averageResolutionTime: 3.5, // Mock calculation
           customerSatisfactionScore: 4.2, // Mock calculation
           firstContactResolution: 85, // Mock percentage
-          ticketVolume: this.generateMonthlyTicketData(tickets.tickets)
+          ticketVolume: { monthly: this.generateMonthlyTicketData(tickets.tickets) }
         }];
       }
 
