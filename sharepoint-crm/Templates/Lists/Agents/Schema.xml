@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<List xmlns:ows="Microsoft SharePoint" Title="CRM Agents" FolderCreation="FALSE" Direction="$Resources:Direction;" Url="Lists/Agents" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x01">
+        <Folder TargetName="Item" />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0120" />
+    </ContentTypes>
+    <Fields>
+      <Field ID="{fa564e0f-0c70-4ab9-b863-0177e6ddd247}" Type="Text" Name="Title" DisplayName="Agent Name" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Title" MaxLength="255" />
+      <Field ID="{7c5b6d3e-4c4e-5d5f-8e9f-0a1b2c3d4e5f}" Type="User" Name="UserAccount" DisplayName="User Account" List="UserInfo" ShowField="ImnName" Required="TRUE" UserSelectionMode="1" UserSelectionScope="0" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="UserAccount" />
+      <Field ID="{8d6b7e4f-5d5f-6e6g-9f0a-1b2c3d4e5f6g}" Type="Text" Name="Email" DisplayName="Email" Required="TRUE" MaxLength="255" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Email" />
+      <Field ID="{9e7c8f5g-6e6g-7f7h-0a1b-2c3d4e5f6g7h}" Type="Text" Name="Phone" DisplayName="Phone" Required="FALSE" MaxLength="50" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Phone" />
+      <Field ID="{af8d9h6h-7f7h-8g8i-1b2c-3d4e5f6g7h8i}" Type="Choice" Name="Role" DisplayName="Role" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Role" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Agent</CHOICE>
+          <CHOICE>Senior Agent</CHOICE>
+          <CHOICE>Team Lead</CHOICE>
+          <CHOICE>Manager</CHOICE>
+        </CHOICES>
+        <Default>Agent</Default>
+      </Field>
+      <Field ID="{b09eai7i-8g8i-9h9j-2c3d-4e5f6g7h8i9j}" Type="MultiChoice" Name="Skills" DisplayName="Skills" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Skills" FillInChoice="TRUE">
+        <CHOICES>
+          <CHOICE>Technical Support</CHOICE>
+          <CHOICE>Billing Support</CHOICE>
+          <CHOICE>Customer Service</CHOICE>
+          <CHOICE>Product Knowledge</CHOICE>
+          <CHOICE>Account Management</CHOICE>
+          <CHOICE>Escalation Handling</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{c1afj8j-9h9j-0i0k-3d4e-5f6g7h8i9j0k}" Type="Choice" Name="Status" DisplayName="Status" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Status" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Active</CHOICE>
+          <CHOICE>On Leave</CHOICE>
+          <CHOICE>Inactive</CHOICE>
+        </CHOICES>
+        <Default>Active</Default>
+      </Field>
+      <Field ID="{d2bg0k9k-0i0k-1j1l-4e5f-6g7h8i9j0k1l}" Type="DateTime" Name="HireDate" DisplayName="Hire Date" Required="FALSE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="HireDate" />
+      <Field ID="{e3ch1l0l-1j1l-2k2m-5f6g-7h8i9j0k1l2m}" Type="Number" Name="MaxConcurrentTickets" DisplayName="Max Concurrent Tickets" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="MaxConcurrentTickets" Min="1" />
+      <Field ID="{f4di2m1m-2k2m-3l3n-6g7h-8i9j0k1l2m3n}" Type="Number" Name="CurrentTickets" DisplayName="Current Tickets" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="CurrentTickets" ReadOnly="TRUE" Min="0" />
+      <Field ID="{05ej3n2n-3l3n-4m4o-7h8i-9j0k1l2m3n4o}" Type="DateTime" Name="LastAssignment" DisplayName="Last Assignment" Required="FALSE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="LastAssignment" ReadOnly="TRUE" />
+      <Field ID="{16fk4o3o-4m4o-5n5p-8i9j-0k1l2m3n4o5p}" Type="Number" Name="TotalTicketsHandled" DisplayName="Total Tickets Handled" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="TotalTicketsHandled" ReadOnly="TRUE" Min="0" />
+      <Field ID="{27gl5p4p-5n5p-6o6q-9j0k-1l2m3n4o5p6q}" Type="Number" Name="AverageResolutionTime" DisplayName="Average Resolution Time (Hours)" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="AverageResolutionTime" ReadOnly="TRUE" Min="0" />
+      <Field ID="{38hm6q5q-6o6q-7p7r-0k1l-2m3n4o5p6q7r}" Type="Number" Name="SatisfactionRating" DisplayName="Average Satisfaction Rating" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="SatisfactionRating" ReadOnly="TRUE" Min="0" Max="5" />
+      <Field ID="{49in7r6r-7p7r-8q8s-1l2m-3n4o5p6q7r8s}" Type="DateTime" Name="LastActiveDate" DisplayName="Last Active Date" Required="FALSE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="LastActiveDate" ReadOnly="TRUE" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="All Agents" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="AllItems.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="Role" />
+          <FieldRef Name="Email" />
+          <FieldRef Name="Phone" />
+          <FieldRef Name="Status" />
+          <FieldRef Name="CurrentTickets" />
+          <FieldRef Name="MaxConcurrentTickets" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="Title" Ascending="TRUE" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="2" Type="HTML" WebPartZoneID="Main" DisplayName="Active Agents" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="ActiveAgents.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="Role" />
+          <FieldRef Name="Email" />
+          <FieldRef Name="CurrentTickets" />
+          <FieldRef Name="MaxConcurrentTickets" />
+          <FieldRef Name="TotalTicketsHandled" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <Where>
+            <Eq>
+              <FieldRef Name="Status" />
+              <Value Type="Text">Active</Value>
+            </Eq>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="Title" Ascending="TRUE" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="3" Type="HTML" WebPartZoneID="Main" DisplayName="By Role" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="ByRole.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="Email" />
+          <FieldRef Name="Status" />
+          <FieldRef Name="Skills" />
+          <FieldRef Name="CurrentTickets" />
+          <FieldRef Name="TotalTicketsHandled" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <Where>
+            <Eq>
+              <FieldRef Name="Status" />
+              <Value Type="Text">Active</Value>
+            </Eq>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="Title" Ascending="TRUE" />
+          </OrderBy>
+        </Query>
+        <GroupBy Collapse="TRUE" GroupLimit="30">
+          <FieldRef Name="Role" />
+        </GroupBy>
+      </View>
+      <View BaseViewID="4" Type="HTML" WebPartZoneID="Main" DisplayName="Available for Assignment" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="AvailableAgents.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="Role" />
+          <FieldRef Name="Skills" />
+          <FieldRef Name="CurrentTickets" />
+          <FieldRef Name="MaxConcurrentTickets" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <Where>
+            <And>
+              <Eq>
+                <FieldRef Name="Status" />
+                <Value Type="Text">Active</Value>
+              </Eq>
+              <Lt>
+                <FieldRef Name="CurrentTickets" />
+                <FieldRef Name="MaxConcurrentTickets" />
+              </Lt>
+            </And>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="CurrentTickets" Ascending="TRUE" />
+          </OrderBy>
+        </Query>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="NewForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>
