@@ -130,7 +130,7 @@ export class PowerAutomateService {
 
       return {
         success: true,
-        ticketId: ticketData.id,
+        ticketId: 'TCK_EMAIL_' + Date.now(),
         message: 'Email processed and ticket created'
       };
     } catch (error) {
