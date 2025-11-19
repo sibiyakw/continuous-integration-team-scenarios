@@ -9,7 +9,7 @@ import {
   getTheme,
   mergeStyles,
   Shimmer,
-  ShimmerElementType,
+  ShimmerElementsType,
 } from '@fluentui/react';
 import {
   Icon,
