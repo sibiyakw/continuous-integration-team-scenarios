@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<List xmlns:ows="Microsoft SharePoint" Title="CRM Tickets" FolderCreation="FALSE" Direction="$Resources:Direction;" Url="Lists/Tickets" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x01">
+        <Folder TargetName="Item" />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0120" />
+    </ContentTypes>
+    <Fields>
+      <Field ID="{fa564e0f-0c70-4ab9-b863-0177e6ddd247}" Type="Text" Name="Title" DisplayName="Ticket Subject" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Title" MaxLength="255" />
+      <Field ID="{82642ec8-ef9b-478f-acf2-3115ff7b3b84}" Type="Note" Name="Description" DisplayName="Description" Required="TRUE" NumLines="6" RichText="FALSE" Sortable="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Description" />
+      <Field ID="{b23b5c1e-1a1c-4b2c-9f4a-3a5b4d6e7f8g}" Type="Lookup" Name="CustomerID" DisplayName="Customer" List="Lists/Customers" ShowField="CompanyName" Required="TRUE" UnlimitedLengthInDocumentLibrary="FALSE" RelationshipDeleteBehavior="None" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="CustomerID" />
+      <Field ID="{1f5b5c2e-2a2c-5b3c-0g5a-4a6b5d7e8f9h}" Type="User" Name="AssignedTo" DisplayName="Assigned To" List="UserInfo" ShowField="ImnName" Required="FALSE" UserSelectionMode="1" UserSelectionScope="0" UnlimitedLengthInDocumentLibrary="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="AssignedTo" />
+      <Field ID="{2c6b3d2f-3b3d-6c4d-1h6b-5b7c6e8f9g0i}" Type="Choice" Name="Status" DisplayName="Status" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Status" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>New</CHOICE>
+          <CHOICE>In Progress</CHOICE>
+          <CHOICE>Waiting for Customer</CHOICE>
+          <CHOICE>Resolved</CHOICE>
+          <CHOICE>Closed</CHOICE>
+          <CHOICE>Escalated</CHOICE>
+        </CHOICES>
+        <Default>New</Default>
+      </Field>
+      <Field ID="{3d7b4e3f-4c4e-7d5e-2i7c-6c8d7f9g0h1j}" Type="Choice" Name="Priority" DisplayName="Priority" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Priority" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Low</CHOICE>
+          <CHOICE>Medium</CHOICE>
+          <CHOICE>High</CHOICE>
+          <CHOICE>Critical</CHOICE>
+        </CHOICES>
+        <Default>Medium</Default>
+      </Field>
+      <Field ID="{4e8c5f4f-5d5f-8e6f-3j8d-7d9e8g0h1i2k}" Type="Choice" Name="Category" DisplayName="Category" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Category" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Technical</CHOICE>
+          <CHOICE>Billing</CHOICE>
+          <CHOICE>General</CHOICE>
+          <CHOICE>Feature Request</CHOICE>
+        </CHOICES>
+        <Default>General</Default>
+      </Field>
+      <Field ID="{5f9d6g5g-6e6g-9f7g-4k9e-8e9f9h1i2j3l}" Type="DateTime" Name="SLADeadline" DisplayName="SLA Deadline" Required="FALSE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="SLADeadline" />
+      <Field ID="{2846e2c3-3b4d-4c5d-8e8f-9091a1b2c3d4}" Type="DateTime" Name="CreatedDate" DisplayName="Created Date" Required="FALSE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="CreatedDate" ReadOnly="TRUE" />
+      <Field ID="{3957f3d4-4c5e-5d6e-9f0a-0102b2c3d4e5}" Type="DateTime" Name="ResolvedDate" DisplayName="Resolved Date" Required="FALSE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="ResolvedDate" />
+      <Field ID="{4a68g4e5-5d6e-6e7f-0a1b-1213c3d4e5f6}" Type="User" Name="CreatedBy" DisplayName="Created By" List="UserInfo" ShowField="ImnName" Required="FALSE" UserSelectionMode="1" UserSelectionScope="0" ReadOnly="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="CreatedBy" />
+      <Field ID="{5b79h5f6-6e7f-7f8g-1b2c-2324d4e5f6g7}" Type="Note" Name="ResolutionNotes" DisplayName="Resolution Notes" Required="FALSE" NumLines="4" RichText="FALSE" Sortable="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="ResolutionNotes" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="All Items" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="AllItems.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="CustomerID" />
+          <FieldRef Name="Status" />
+          <FieldRef Name="Priority" />
+          <FieldRef Name="AssignedTo" />
+          <FieldRef Name="CreatedDate" />
+          <FieldRef Name="SLADeadline" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Aggregations Value="Off">
+          <FieldRef Name="Title" Type="COUNT" />
+        </Aggregations>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="CreatedDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="2" Type="HTML" WebPartZoneID="Main" DisplayName="My Tickets" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="MyTickets.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="CustomerID" />
+          <FieldRef Name="Status" />
+          <FieldRef Name="Priority" />
+          <FieldRef Name="CreatedDate" />
+          <FieldRef Name="SLADeadline" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <Where>
+            <Eq>
+              <FieldRef Name="AssignedTo" />
+              <Value Type="Integer">
+                <UserID />
+              </Value>
+            </Eq>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="Priority" Ascending="FALSE" />
+            <FieldRef Name="CreatedDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="3" Type="HTML" WebPartZoneID="Main" DisplayName="Unassigned" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="Unassigned.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="CustomerID" />
+          <FieldRef Name="Priority" />
+          <FieldRef Name="Category" />
+          <FieldRef Name="CreatedDate" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <Where>
+            <And>
+              <Eq>
+                <FieldRef Name="Status" />
+                <Value Type="Text">New</Value>
+              </Eq>
+              <IsNull>
+                <FieldRef Name="AssignedTo" />
+              </IsNull>
+            </And>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="Priority" Ascending="FALSE" />
+            <FieldRef Name="CreatedDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="4" Type="HTML" WebPartZoneID="Main" DisplayName="By Customer" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="ByCustomer.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="Status" />
+          <FieldRef Name="Priority" />
+          <FieldRef Name="AssignedTo" />
+          <FieldRef Name="CreatedDate" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="CustomerID" />
+            <FieldRef Name="CreatedDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+        <GroupBy Collapse="TRUE" GroupLimit="30">
+          <FieldRef Name="CustomerID" />
+        </GroupBy>
+      </View>
+      <View BaseViewID="5" Type="HTML" WebPartZoneID="Main" DisplayName="SLA Dashboard" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="SLADashboard.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="CustomerID" />
+          <FieldRef Name="Status" />
+          <FieldRef Name="Priority" />
+          <FieldRef Name="AssignedTo" />
+          <FieldRef Name="SLADeadline" />
+          <FieldRef Name="CreatedDate" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <Where>
+            <And>
+              <Neq>
+                <FieldRef Name="Status" />
+                <Value Type="Text">Resolved</Value>
+              </Neq>
+              <Neq>
+                <FieldRef Name="Status" />
+                <Value Type="Text">Closed</Value>
+              </Neq>
+            </And>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="SLADeadline" Ascending="TRUE" />
+          </OrderBy>
+        </Query>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="NewForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>
