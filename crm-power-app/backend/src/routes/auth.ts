@@ -16,7 +16,7 @@ const generateToken = (user: any, role: string = 'Customer') => {
   };
 
   const secret = process.env.JWT_SECRET || 'fallback-secret';
-  const options: jwt.SignOptions = { expiresIn: (process.env.JWT_EXPIRES_IN || '24h') as string };
+  const options = { expiresIn: process.env.JWT_EXPIRES_IN || '24h' };
 
   return jwt.sign(payload, secret, options);
 };
