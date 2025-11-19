@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<List xmlns:ows="Microsoft SharePoint" Title="CRM SLA Rules" FolderCreation="FALSE" Direction="$Resources:Direction;" Url="Lists/SLARules" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x01">
+        <Folder TargetName="Item" />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0120" />
+    </ContentTypes>
+    <Fields>
+      <Field ID="{fa564e0f-0c70-4ab9-b863-0177e6ddd247}" Type="Text" Name="Title" DisplayName="Rule Name" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Title" MaxLength="255" />
+      <Field ID="{7c5b6d3e-4c4e-5d5f-8e9f-0a1b2c3d4e5f}" Type="Choice" Name="Priority" DisplayName="Priority" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Priority" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Low</CHOICE>
+          <CHOICE>Medium</CHOICE>
+          <CHOICE>High</CHOICE>
+          <CHOICE>Critical</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{8d6b7e4f-5d5f-6e6g-9f0a-1b2c3d4e5f6g}" Type="Choice" Name="Category" DisplayName="Category" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Category" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Technical</CHOICE>
+          <CHOICE>Billing</CHOICE>
+          <CHOICE>General</CHOICE>
+          <CHOICE>Feature Request</CHOICE>
+          <CHOICE>All</CHOICE>
+        </CHOICES>
+        <Default>All</Default>
+      </Field>
+      <Field ID="{9e7c8f5g-6e6g-7f7h-0a1b-2c3d4e5f6g7h}" Type="Choice" Name="AccountType" DisplayName="Account Type" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="AccountType" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Free</CHOICE>
+          <CHOICE>Basic</CHOICE>
+          <CHOICE>Premium</CHOICE>
+          <CHOICE>Enterprise</CHOICE>
+          <CHOICE>All</CHOICE>
+        </CHOICES>
+        <Default>All</Default>
+      </Field>
+      <Field ID="{af8d9h6h-7f7h-8g8i-1b2c-3d4e5f6g7h8i}" Type="Number" Name="FirstResponseTime" DisplayName="First Response Time (Hours)" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="FirstResponseTime" Min="0" />
+      <Field ID="{b09eai7i-8g8i-9h9j-2c3d-4e5f6g7h8i9j}" Type="Number" Name="ResolutionTime" DisplayName="Resolution Time (Hours)" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="ResolutionTime" Min="0" />
+      <Field ID="{c1afj8j-9h9j-0i0k-3d4e-5f6g7h8i9j0k}" Type="Number" Name="WarningThreshold" DisplayName="Warning Threshold (%)" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="WarningThreshold" Min="50" Max="95">
+        <Default>75</Default>
+      </Field>
+      <Field ID="{d2bg0k9k-0i0k-1j1l-4e5f-6g7h8i9j0k1l}" Type="Choice" Name="EscalationRule" DisplayName="Escalation Rule" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="EscalationRule" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>None</CHOICE>
+          <CHOICE>Team Lead</CHOICE>
+          <CHOICE>Manager</CHOICE>
+          <CHOICE>Both</CHOICE>
+        </CHOICES>
+        <Default>Team Lead</Default>
+      </Field>
+      <Field ID="{e3ch1l0l-1j1l-2k2m-5f6g-7h8i9j0k1l2m}" Type="Number" Name="EscalationTime" DisplayName="Escalation Time (Hours)" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="EscalationTime" Min="0" />
+      <Field ID="{f4di2m1m-2k2m-3l3n-6g7h-8i9j0k1l2m3n}" Type="Choice" Name="Status" DisplayName="Status" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Status" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Active</CHOICE>
+          <CHOICE>Inactive</CHOICE>
+        </CHOICES>
+        <Default>Active</Default>
+      </Field>
+      <Field ID="{05ej3n2n-3l3n-4m4o-7h8i-9j0k1l2m3n4o}" Type="DateTime" Name="CreatedDate" DisplayName="Created Date" Required="FALSE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="CreatedDate" ReadOnly="TRUE" />
+      <Field ID="{16fk4o3o-4m4o-5n5p-8i9j-0k1l2m3n4o5p}" Type="User" Name="CreatedBy" DisplayName="Created By" List="UserInfo" ShowField="ImnName" Required="FALSE" UserSelectionMode="1" UserSelectionScope="0" ReadOnly="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="CreatedBy" />
+      <Field ID="{27gl5p4p-5n5p-6o6q-9j0k-1l2m3n4o5p6q}" Type="DateTime" Name="LastModified" DisplayName="Last Modified" Required="FALSE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="LastModified" ReadOnly="TRUE" />
+      <Field ID="{38hm6q5q-6o6q-7p7r-0k1l-2m3n4o5p6q7r}" Type="Note" Name="Description" DisplayName="Description" Required="FALSE" NumLines="4" RichText="FALSE" Sortable="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Description" />
+      <Field ID="{49in7r6r-7p7r-8q8s-1l2m-3n4o5p6q7r8s}" Type="Number" Name="BusinessHoursOnly" DisplayName="Business Hours Only" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="BusinessHoursOnly" Min="0" Max="1">
+        <Default>1</Default>
+      </Field>
+      <Field ID="{5ajo8s7s-8q8s-9r9t-2m3n-4o5p6q7r8s9t}" Type="Note" Name="BusinessHours" DisplayName="Business Hours" Required="FALSE" NumLines="2" RichText="FALSE" Sortable="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="BusinessHours">
+        <Default>Monday-Friday: 9:00 AM - 6:00 PM</Default>
+      </Field>
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="All SLA Rules" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="AllItems.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="Priority" />
+          <FieldRef Name="Category" />
+          <FieldRef Name="AccountType" />
+          <FieldRef Name="FirstResponseTime" />
+          <FieldRef Name="ResolutionTime" />
+          <FieldRef Name="Status" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="Priority" />
+            <FieldRef Name="Category" />
+            <FieldRef Name="AccountType" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="2" Type="HTML" WebPartZoneID="Main" DisplayName="Active Rules" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="ActiveRules.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="Priority" />
+          <FieldRef Name="Category" />
+          <FieldRef Name="AccountType" />
+          <FieldRef Name="FirstResponseTime" />
+          <FieldRef Name="ResolutionTime" />
+          <FieldRef Name="WarningThreshold" />
+          <FieldRef Name="EscalationRule" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <Where>
+            <Eq>
+              <FieldRef Name="Status" />
+              <Value Type="Text">Active</Value>
+            </Eq>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="Priority" />
+            <FieldRef Name="AccountType" />
+            <FieldRef Name="Category" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="3" Type="HTML" WebPartZoneID="Main" DisplayName="By Priority" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="ByPriority.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="Category" />
+          <FieldRef Name="AccountType" />
+          <FieldRef Name="FirstResponseTime" />
+          <FieldRef Name="ResolutionTime" />
+          <FieldRef Name="Status" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Query>
+          <Where>
+            <Eq>
+              <FieldRef Name="Status" />
+              <Value Type="Text">Active</Value>
+            </Eq>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="Priority" />
+            <FieldRef Name="Title" Ascending="TRUE" />
+          </OrderBy>
+        </Query>
+        <GroupBy Collapse="TRUE" GroupLimit="30">
+          <FieldRef Name="Priority" />
+        </GroupBy>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="NewForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>
