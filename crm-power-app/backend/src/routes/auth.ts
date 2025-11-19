@@ -8,16 +8,17 @@ const authService = new AuthService();
 
 // Generate JWT token for authenticated user
 const generateToken = (user: any, role: string = 'Customer') => {
-  return jwt.sign(
-    {
-      id: user.id,
-      displayName: user.displayName,
-      email: user.email,
-      role: role
-    },
-    process.env.JWT_SECRET || 'fallback-secret',
-    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
-  );
+  const payload = {
+    id: user.id,
+    displayName: user.displayName,
+    email: user.email,
+    role: role
+  };
+
+  const secret = process.env.JWT_SECRET || 'fallback-secret';
+  const options: jwt.SignOptions = { expiresIn: process.env.JWT_EXPIRES_IN || '24h' };
+
+  return jwt.sign(payload, secret, options);
 };
 
 // Get Microsoft OAuth URL
