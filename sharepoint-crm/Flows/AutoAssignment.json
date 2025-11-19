@@ -1,0 +1,429 @@
+{
+  "name": "CRM - Auto Ticket Assignment",
+  "description": "Automatically assigns new tickets to appropriate agents based on priority, category, and agent availability",
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonline",
+        "source": "builtIn",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+      },
+      "shared_office365": {
+        "connectionName": "shared_office365",
+        "source": "builtIn",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {},
+      "triggers": {
+        "When_a_new_item_is_created": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "OnNewItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Tickets"
+            },
+            "splitOn": "@triggerOutputs()?['body/value']"
+          },
+          "recurrence": []
+        }
+      },
+      "actions": {
+        "Initialize_Variables": {
+          "type": "Scope",
+          "actions": {
+            "Initialize_SelectedAgent": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "SelectedAgent",
+                    "type": "object",
+                    "value": {}
+                  }
+                ]
+              },
+              "runAfter": {}
+            },
+            "Initialize_AssignmentLog": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "AssignmentLog",
+                    "type": "string",
+                    "value": ""
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_SelectedAgent": [
+                  "Succeeded"
+                ]
+              }
+            }
+          }
+        },
+        "Get_Ticket_Details": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Tickets",
+              "id": "@triggerOutputs()?['body/ID']"
+            }
+          },
+          "runAfter": {
+            "Initialize_Variables": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Get_SLA_Rules": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM SLA Rules",
+              "$filter": "Priority eq '@{triggerOutputs()?['body/Priority']}' and Status eq 'Active'"
+            }
+          },
+          "runAfter": {
+            "Get_Ticket_Details": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Calculate_SLA_Deadline": {
+          "type": "Compose",
+          "inputs": "@addHours(utcNow(), if(equals(triggerOutputs()?['body/Priority'], 'Critical'), body('Get_SLA_Rules')?[0]?['ResolutionTime'], if(equals(triggerOutputs()?['body/Priority'], 'High'), body('Get_SLA_Rules')?[0]?['ResolutionTime'], if(equals(triggerOutputs()?['body/Priority'], 'Medium'), 24, 72))))",
+          "runAfter": {
+            "Get_SLA_Rules": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Update_Ticket_SLA": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "UpdateItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Tickets",
+              "id": "@triggerOutputs()?['body/ID']",
+              "item": {
+                "SLADeadline": "@{outputs('Calculate_SLA_Deadline')}"
+              }
+            }
+          },
+          "runAfter": {
+            "Calculate_SLA_Deadline": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Get_Available_Agents": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Agents",
+              "$filter": "Status eq 'Active' and CurrentTickets lt MaxConcurrentTickets"
+            }
+          },
+          "runAfter": {
+            "Update_Ticket_SLA": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_Agents_by_Skills": {
+          "type": "Filter_array",
+          "inputs": {
+            "from": "@body('Get_Available_Agents')?['value']",
+            "where": "@contains(item()?['Skills'], if(equals(triggerOutputs()?['body/Category'], 'Technical'), 'Technical Support', if(equals(triggerOutputs()?['body/Category'], 'Billing'), 'Billing Support', 'Customer Service')))"
+          },
+          "runAfter": {
+            "Get_Available_Agents": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Check_for_Eligible_Agents": {
+          "type": "Condition",
+          "expression": {
+            "and": [
+              {
+                "greater": [
+                  "@length(body('Filter_Agents_by_Skills'))",
+                  0
+                ]
+              }
+            ]
+          },
+          "runAfter": {
+            "Filter_Agents_by_Skills": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Select_Agent_by_Workload": {
+          "type": "Select",
+          "inputs": {
+            "from": "@body('Filter_Agents_by_Skills')",
+            "select": {
+              "Agent": "@item()?['Title']",
+              "AgentId": "@item()?['ID']",
+              "Workload": "@div(item()?['CurrentTickets'], item()?['MaxConcurrentTickets'])",
+              "LastAssignment": "@item()?['LastAssignment']"
+            }
+          },
+          "runAfter": {
+            "Check_for_Eligible_Agents": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Sort_Agents_by_Workload": {
+          "type": "Sort",
+          "inputs": {
+            "items": "@body('Select_Agent_by_Workload')",
+            "sortBy": "Workload",
+            "order": "Ascending"
+          },
+          "runAfter": {
+            "Select_Agent_by_Workload": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Assign_to_Best_Agent": {
+          "type": "Set_variable",
+          "inputs": {
+            "name": "SelectedAgent",
+            "value": "@first(body('Sort_Agents_by_Workload'))"
+          },
+          "runAfter": {
+            "Sort_Agents_by_Workload": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Update_Ticket_Assignment": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "UpdateItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Tickets",
+              "id": "@triggerOutputs()?['body/ID']",
+              "item": {
+                "AssignedTo": "@{variables('SelectedAgent')?['AgentId']}"
+              }
+            }
+          },
+          "runAfter": {
+            "Assign_to_Best_Agent": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Update_Agent_Workload": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "UpdateItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Agents",
+              "id": "@{variables('SelectedAgent')?['AgentId']}",
+              "item": {
+                "CurrentTickets": "@add(int(item()?['CurrentTickets']), 1)",
+                "LastAssignment": "@utcNow()"
+              }
+            }
+          },
+          "runAfter": {
+            "Update_Ticket_Assignment": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Create_Assignment_History": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Ticket History",
+              "item": {
+                "Title": "Ticket assigned to @{variables('SelectedAgent')?['Agent']}",
+                "TicketID": "@triggerOutputs()?['body/ID']",
+                "ActionType": "Assigned",
+                "ActionedBy": "System",
+                "Description": "Automatically assigned to @{variables('SelectedAgent')?['Agent']} based on skills and workload balance",
+                "ActionDate": "@utcNow()",
+                "Visibility": "Internal",
+                "IsSystemGenerated": true
+              }
+            }
+          },
+          "runAfter": {
+            "Update_Agent_Workload": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Notify_Assigned_Agent": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "parameters": {
+              "to": "@variables('SelectedAgent')?['AgentId']",
+              "subject": "New Ticket Assigned: @{triggerOutputs()?['body/Title']} (#{triggerOutputs()?['body/ID']})",
+              "body": {
+                "content": "<p>Hello @{variables('SelectedAgent')?['Agent']},</p><p>A new ticket has been assigned to you:</p><ul><li><strong>Ticket ID:</strong> #{triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{triggerOutputs()?['body/Title']}</li><li><strong>Priority:</strong> @{triggerOutputs()?['body/Priority']}</li><li><strong>Category:</strong> @{triggerOutputs()?['body/Category']}</li><li><strong>Customer:</strong> @{triggerOutputs()?['body/CustomerID/Title']}</li><li><strong>SLA Deadline:</strong> @{outputs('Calculate_SLA_Deadline')}</li></ul><p><strong>Description:</strong></p><p>@{triggerOutputs()?['body/Description']}</p><p>Please review and begin working on this ticket at your earliest convenience.</p><p>You can access the ticket through the Agent Dashboard or SharePoint CRM site.</p><p>Best regards,<br>CRM System</p>",
+                "contentType": "Html"
+              },
+              "importance": "Normal"
+            }
+          },
+          "runAfter": {
+            "Create_Assignment_History": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Notify_Customer": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "parameters": {
+              "to": "@triggerOutputs()?['body/CustomerID/Email']",
+              "subject": "Your ticket has been assigned - #{triggerOutputs()?['body/ID']}",
+              "body": {
+                "content": "<p>Dear @{triggerOutputs()?['body/CustomerID/ContactName']},</p><p>Your support ticket has been successfully assigned to one of our agents.</p><p><strong>Ticket Details:</strong></p><ul><li><strong>Ticket ID:</strong> #{triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{triggerOutputs()?['body/Title']}</li><li><strong>Priority:</strong> @{triggerOutputs()?['body/Priority']}</li><li><strong>Assigned Agent:</strong> @{variables('SelectedAgent')?['Agent']}</li></ul><p><strong>Expected Response Time:</strong></p><p>@{switch(triggerOutputs()?['body/Priority'], 'Critical', 'Within 1 hour', 'High', 'Within 2 hours', 'Medium', 'Within 4 hours', 'Low', 'Within 8 hours')}</p><p>You can track the status of your ticket by logging into the Customer Portal.</p><p>Thank you for your patience.</p><p>Best regards,<br>Support Team</p>",
+                "contentType": "Html"
+              },
+              "importance": "Normal"
+            }
+          },
+          "runAfter": {
+            "Notify_Assigned_Agent": [
+              "Succeeded"
+            ]
+          }
+        },
+        "No_Eligible_Agents": {
+          "type": "Compose",
+          "inputs": "No eligible agents found for this ticket. Escalating to team lead.",
+          "runAfter": {
+            "Check_for_Eligible_Agents": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Create_Unassigned_History": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Ticket History",
+              "item": {
+                "Title": "Ticket remains unassigned - no eligible agents available",
+                "TicketID": "@triggerOutputs()?['body/ID']",
+                "ActionType": "System Alert",
+                "ActionedBy": "System",
+                "Description": "No agents available with required skills for category: @{triggerOutputs()?['body/Category']} and priority: @{triggerOutputs()?['body/Priority']}",
+                "ActionDate": "@utcNow()",
+                "Visibility": "Internal",
+                "IsSystemGenerated": true
+              }
+            }
+          },
+          "runAfter": {
+            "No_Eligible_Agents": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Notify_Team_Lead": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "parameters": {
+              "to": "teamlead@company.com",
+              "subject": "URGENT: Ticket Requires Manual Assignment - #{triggerOutputs()?['body/ID']}",
+              "body": {
+                "content": "<p>Team Lead,</p><p>A new ticket requires manual assignment as no eligible agents are currently available:</p><ul><li><strong>Ticket ID:</strong> #{triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{triggerOutputs()?['body/Title']}</li><li><strong>Priority:</strong> @{triggerOutputs()?['body/Priority']}</li><li><strong>Category:</strong> @{triggerOutputs()?['body/Category']}</li><li><strong>Customer:</strong> @{triggerOutputs()?['body/CustomerID/Title']}</li></ul><p><strong>Issue:</strong> No agents available with the required skills or within workload capacity.</p><p>Please review and manually assign this ticket as soon as possible.</p><p>You can access the ticket management system here: <a href=\"https://tenant.sharepoint.com/sites/crm\">CRM Dashboard</a></p><p>Regards,<br>CRM System</p>",
+                "contentType": "Html"
+              },
+              "importance": "High"
+            }
+          },
+          "runAfter": {
+            "Create_Unassigned_History": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    }
+  }
+}
