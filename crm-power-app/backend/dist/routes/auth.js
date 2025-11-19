@@ -11,12 +11,15 @@ const router = express_1.default.Router();
 const authService = new authService_1.default();
 // Generate JWT token for authenticated user
 const generateToken = (user, role = 'Customer') => {
-    return jsonwebtoken_1.default.sign({
+    const payload = {
         id: user.id,
         displayName: user.displayName,
         email: user.email,
         role: role
-    }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: process.env.JWT_EXPIRES_IN || '24h' });
+    };
+    const secret = process.env.JWT_SECRET || 'fallback-secret';
+    const options = { expiresIn: process.env.JWT_EXPIRES_IN || '24h' };
+    return jsonwebtoken_1.default.sign(payload, secret, options);
 };
 // Get Microsoft OAuth URL
 router.get('/microsoft/url', async (req, res) => {
