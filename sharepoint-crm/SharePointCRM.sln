@@ -1,0 +1,40 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharePointCRM", "SharePointCRM", "{B8E7F5A1-2D3C-4F7E-9B8A-1D2C3F4B5A6C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{C9F8G6B2-3E4D-5G8F-0C9D-1E2F3G4H5I6J}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{D0G9H7C3-4F5E-6H9G-1D0E-2F3G4H5I6J7K}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PowerApps", "PowerApps", "{E1H0I8D4-5G6F-7I0H-2E1F-3G4H5I6J7K8L}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Flows", "Flows", "{F2I1J9E5-6H7G-8J1I-3F2G-4H5I6J7K8L9M}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{G3J2K0F6-7I8H-9K2J-4G3H-5I6J7K8L9M0N}"
+	ProjectSection(SolutionItems) = preProject
+		Config\permissions.xml = Config\permissions.xml
+		Config\site-config.xml = Config\site-config.xml
+		Config\sla-rules.xml = Config\sla-rules.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lists", "Lists", "{H4K3L1G7-8J9I-0L3K-5H4I-6J7K8L9M0N1O}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SPFx", "SPFx", "{I6L5M3I9-0L1K-2M5L-7J6K-8L9M0N1O2P3Q}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C9F8G6B2-3E4D-5G8F-0C9D-1E2F3G4H5I6J} = {B8E7F5A1-2D3C-4F7E-9B8A-1D2C3F4B5A6C}
+		{D0G9H7C3-4F5E-6H9G-1D0E-2F3G4H5I6J7K} = {B8E7F5A1-2D3C-4F7E-9B8A-1D2C3F4B5A6C}
+		{E1H0I8D4-5G6F-7I0H-2E1F-3G4H5I6J7K8L} = {B8E7F5A1-2D3C-4F7E-9B8A-1D2C3F4B5A6C}
+		{F2I1J9E5-6H7G-8J1I-3F2G-4H5I6J7K8L9M} = {B8E7F5A1-2D3C-4F7E-9B8A-1D2C3F4B5A6C}
+		{G3J2K0F6-7I8H-9K2J-4G3H-5I6J7K8L9M0N} = {B8E7F5A1-2D3C-4F7E-9B8A-1D2C3F4B5A6C}
+		{H4K3L1G7-8J9I-0L3K-5H4I-6J7K8L9M0N1O} = {C9F8G6B2-3E4D-5G8F-0C9D-1E2F3G4H5I6J}
+		{I6L5M3I9-0L1K-2M5L-7J6K-8L9M0N1O2P3Q} = {B8E7F5A1-2D3C-4F7E-9B8A-1D2C3F4B5A6C}
+	EndGlobalSection
+EndGlobal
