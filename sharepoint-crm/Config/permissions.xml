@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Permissions xmlns="http://schemas.microsoft.com/sharepoint/2014/app">
+  <!-- SharePoint CRM Permission Configuration -->
+  <!-- This file defines the security structure for the CRM system -->
+
+  <!-- Site Collection Permissions -->
+  <SitePermissions>
+    <!-- CRM Administrators Group -->
+    <Group Name="CRM Administrators" Description="Full access to all CRM components">
+      <Roles>
+        <Role>Full Control</Role>
+      </Roles>
+      <Members>
+        <Member Type="User" Email="admin@company.com" />
+      </Members>
+    </Group>
+
+    <!-- CRM Agents Group -->
+    <Group Name="CRM Agents" Description="Service team members with ticket management access">
+      <Roles>
+        <Role>Contribute</Role>
+      </Roles>
+      <Members>
+        <Member Type="User" Email="teamlead@company.com" />
+        <Member Type="Group" Name="Service Team" />
+      </Members>
+    </Group>
+
+    <!-- CRM Customers Group -->
+    <Group Name="CRM Customers" Description="External customers with limited access">
+      <Roles>
+        <Role>Read</Role>
+      </Roles>
+      <Members>
+        <Member Type="Group" Name="External Customers" />
+      </Members>
+    </Group>
+  </SitePermissions>
+
+  <!-- List-Level Permissions -->
+  <ListPermissions>
+    <!-- CRM Tickets List -->
+    <List Name="CRM Tickets">
+      <DefaultPermissions>
+        <Permission Group="CRM Administrators" Access="Full Control" />
+        <Permission Group="CRM Agents" Access="Contribute" />
+        <Permission Group="CRM Customers" Access="Read" />
+      </DefaultPermissions>
+
+      <!-- Item-Level Permissions for Tickets -->
+      <ItemLevelPermissions>
+        <Rule Description="Customers can only see their own tickets">
+          <Condition Field="CustomerID" Operator="Equals" Value="[Me]" />
+          <Permission Group="CRM Customers" Access="Read" />
+        </Rule>
+
+        <Rule Description="Agents can see assigned tickets and all tickets in their team">
+          <Condition Field="AssignedTo" Operator="Equals" Value="[Me]" />
+          <Permission Group="CRM Agents" Access="Contribute" />
+        </Rule>
+
+        <Rule Description="Team leads can see all tickets">
+          <Condition Field="Role" Operator="In" Value="Team Lead,Manager" />
+          <Permission Group="CRM Agents" Access="Contribute" />
+        </Rule>
+      </ItemLevelPermissions>
+    </List>
+
+    <!-- CRM Customers List -->
+    <List Name="CRM Customers">
+      <DefaultPermissions>
+        <Permission Group="CRM Administrators" Access="Full Control" />
+        <Permission Group="CRM Agents" Access="Contribute" />
+        <Permission Group="CRM Customers" Access="None" />
+      </DefaultPermissions>
+
+      <!-- Special Access Rules -->
+      <SpecialAccess>
+        <Rule Description="Customers can view and edit their own company information">
+          <Condition Field="ContactEmail" Operator="Equals" Value="[Me]" />
+          <Permission Group="CRM Customers" Access="Contribute" />
+        </Rule>
+      </SpecialAccess>
+    </List>
+
+    <!-- CRM Knowledge Articles List -->
+    <List Name="CRM Knowledge Articles">
+      <DefaultPermissions>
+        <Permission Group="CRM Administrators" Access="Full Control" />
+        <Permission Group="CRM Agents" Access="Contribute" />
+        <Permission Group="CRM Customers" Access="Read" />
+      </DefaultPermissions>
+
+      <!-- Item-Level Permissions for Knowledge Articles -->
+      <ItemLevelPermissions>
+        <Rule Description="Published articles are visible to everyone">
+          <Condition Field="Status" Operator="Equals" Value="Published" />
+          <Permission Group="CRM Customers" Access="Read" />
+          <Permission Group="CRM Agents" Access="Read" />
+          <Permission Group="CRM Administrators" Access="Full Control" />
+        </Rule>
+
+        <Rule Description="Draft articles only visible to agents and admins">
+          <Condition Field="Status" Operator="Equals" Value="Draft" />
+          <Permission Group="CRM Customers" Access="None" />
+          <Permission Group="CRM Agents" Access="Contribute" />
+          <Permission Group="CRM Administrators" Access="Full Control" />
+        </Rule>
+
+        <Rule Description="Authors can edit their own draft articles">
+          <Condition>
+            <And>
+              <Condition Field="Status" Operator="Equals" Value="Draft" />
+              <Condition Field="Author" Operator="Equals" Value="[Me]" />
+            </And>
+          </Condition>
+          <Permission Group="CRM Agents" Access="Contribute" />
+        </Rule>
+      </ItemLevelPermissions>
+    </List>
+
+    <!-- CRM Agents List -->
+    <List Name="CRM Agents">
+      <DefaultPermissions>
+        <Permission Group="CRM Administrators" Access="Full Control" />
+        <Permission Group="CRM Agents" Access="Read" />
+        <Permission Group="CRM Customers" Access="None" />
+      </DefaultPermissions>
+
+      <!-- Agents can view their own profile -->
+      <SpecialAccess>
+        <Rule Description="Agents can view and edit their own profile">
+          <Condition Field="UserAccount" Operator="Equals" Value="[Me]" />
+          <Permission Group="CRM Agents" Access="Contribute" />
+        </Rule>
+      </SpecialAccess>
+    </List>
+
+    <!-- CRM SLA Rules List -->
+    <List Name="CRM SLA Rules">
+      <DefaultPermissions>
+        <Permission Group="CRM Administrators" Access="Full Control" />
+        <Permission Group="CRM Agents" Access="Read" />
+        <Permission Group="CRM Customers" Access="None" />
+      </DefaultPermissions>
+    </List>
+
+    <!-- CRM Ticket History List -->
+    <List Name="CRM Ticket History">
+      <DefaultPermissions>
+        <Permission Group="CRM Administrators" Access="Full Control" />
+        <Permission Group="CRM Agents" Access="Contribute" />
+        <Permission Group="CRM Customers" Access="Read" />
+      </DefaultPermissions>
+
+      <!-- Item-Level Permissions for Ticket History -->
+      <ItemLevelPermissions>
+        <Rule Description="Customers can see customer-visible history entries">
+          <Condition>
+            <And>
+              <Condition Field="Visibility" Operator="In" Value="Customer Visible,Public" />
+              <RelatedList Field="TicketID" RelatedField="CustomerID" Value="[Me]" />
+            </And>
+          </Condition>
+          <Permission Group="CRM Customers" Access="Read" />
+        </Rule>
+
+        <Rule Description="Internal history only visible to agents and admins">
+          <Condition Field="Visibility" Operator="Equals" Value="Internal" />
+          <Permission Group="CRM Customers" Access="None" />
+        </Rule>
+      </ItemLevelPermissions>
+    </List>
+  </ListPermissions>
+
+  <!-- Web Part and Page Permissions -->
+  <WebPartPermissions>
+    <!-- Agent Dashboard Web Parts -->
+    <WebPart Name="AgentDashboard">
+      <Permissions>
+        <Allow Group="CRM Administrators" />
+        <Allow Group="CRM Agents" />
+        <Deny Group="CRM Customers" />
+      </Permissions>
+    </WebPart>
+
+    <!-- Customer Portal Web Parts -->
+    <WebPart Name="CustomerPortal">
+      <Permissions>
+        <Allow Group="CRM Administrators" />
+        <Allow Group="CRM Agents" />
+        <Allow Group="CRM Customers" />
+      </Permissions>
+    </WebPart>
+
+    <!-- Management Dashboard Web Parts -->
+    <WebPart Name="ManagementDashboard">
+      <Permissions>
+        <Allow Group="CRM Administrators" />
+        <Deny Group="CRM Agents" />
+        <Deny Group="CRM Customers" />
+      </Permissions>
+    </WebPart>
+  </WebPartPermissions>
+
+  <!-- Power Apps Integration Permissions -->
+  <PowerAppsPermissions>
+    <App Name="Agent Dashboard App">
+      <Permissions>
+        <Allow List="CRM Tickets" Access="Write" />
+        <Allow List="CRM Customers" Access="Read" />
+        <Allow List="CRM Knowledge Articles" Access="Read" />
+        <Allow List="CRM Agents" Access="Read" />
+        <Allow List="CRM SLA Rules" Access="Read" />
+        <Allow List="CRM Ticket History" Access="Write" />
+      </Permissions>
+      <Users>
+        <User Type="Group" Name="CRM Administrators" />
+        <User Type="Group" Name="CRM Agents" />
+      </Users>
+    </App>
+
+    <App Name="Customer Portal App">
+      <Permissions>
+        <Allow List="CRM Tickets" Access="Write" Filter="CustomerID=[Me]" />
+        <Allow List="CRM Customers" Access="Read" Filter="Email=[Me]" />
+        <Allow List="CRM Knowledge Articles" Access="Read" Filter="Status=Published" />
+        <Allow List="CRM Ticket History" Access="Read" Filter="Visibility=CustomerVisible" />
+      </Permissions>
+      <Users>
+        <User Type="Group" Name="CRM Administrators" />
+        <User Type="Group" Name="CRM Customers" />
+      </Users>
+    </App>
+  </PowerAppsPermissions>
+
+  <!-- Power Automate Flow Permissions -->
+  <PowerAutomatePermissions>
+    <Flow Name="Auto-Assignment Flow">
+      <Permissions>
+        <Allow List="CRM Tickets" Access="Write" />
+        <Allow List="CRM Agents" Access="Read" />
+        <Allow List="CRM SLA Rules" Access="Read" />
+        <Allow List="CRM Ticket History" Access="Write" />
+      </Permissions>
+      <RunAs>System Account</RunAs>
+    </Flow>
+
+    <Flow Name="SLA Monitoring Flow">
+      <Permissions>
+        <Allow List="CRM Tickets" Access="Read" />
+        <Allow List="CRM SLA Rules" Access="Read" />
+        <Allow List="CRM Ticket History" Access="Write" />
+        <Allow List="CRM Agents" Access="Read" />
+      </Permissions>
+      <RunAs>System Account</RunAs>
+    </Flow>
+
+    <Flow Name="Customer Communications Flow">
+      <Permissions>
+        <Allow List="CRM Tickets" Access="Read" />
+        <Allow List="CRM Customers" Access="Read" />
+        <Allow List="CRM Ticket History" Access="Write" />
+      </Permissions>
+      <RunAs>System Account</RunAs>
+    </Flow>
+  </PowerAutomatePermissions>
+
+  <!-- External Service Permissions -->
+  <ExternalServicePermissions>
+    <Service Name="Microsoft Graph API">
+      <Permissions>
+        <Allow Scope="User.Read.All" />
+        <Allow Scope="Mail.Send" />
+        <Allow Scope="Sites.Selected" />
+      </Permissions>
+    </Service>
+
+    <Service Name="SharePoint REST API">
+      <Permissions>
+        <Allow Scope="Sites.Read.All" />
+        <Allow Scope="Sites.Write.All" />
+      </Permissions>
+    </Service>
+  </ExternalServicePermissions>
+
+  <!-- Audit and Compliance -->
+  <AuditSettings>
+    <Enabled>true</Enabled>
+    <AuditItems>
+      <Item Type="ListItem" Action="Create" />
+      <Item Type="ListItem" Action="Update" />
+      <Item Type="ListItem" Action="Delete" />
+      <Item Type="ListItem" Action="View" />
+      <Item Type="User" Action="Login" />
+      <Item Type="Permission" Action="Change" />
+    </AuditItems>
+    <RetentionDays>2555</RetentionDays> <!-- 7 years default retention -->
+  </AuditSettings>
+
+  <!-- Data Protection Settings -->
+  <DataProtection>
+    <EncryptionAtRest>true</EncryptionAtRest>
+    <EncryptionInTransit>true</EncryptionInTransit>
+    <DataClassification>Confidential</DataClassification>
+    <GDPRCompliance>true</GDPRCompliance>
+    <DataExportAllowed>true</DataExportAllowed>
+    <DataDeletionAllowed>true</DataDeletionAllowed>
+    <AnonymizationEnabled>true</AnonymizationEnabled>
+  </DataProtection>
+</Permissions>
