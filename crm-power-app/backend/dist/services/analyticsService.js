@@ -84,7 +84,7 @@ class AnalyticsService {
                         averageResolutionTime: 3.5, // Mock calculation
                         customerSatisfactionScore: 4.2, // Mock calculation
                         firstContactResolution: 85, // Mock percentage
-                        ticketVolume: this.generateMonthlyTicketData(tickets.tickets)
+                        ticketVolume: { monthly: this.generateMonthlyTicketData(tickets.tickets) }
                     }];
             }
             // Get analytics for all customers
@@ -326,12 +326,14 @@ class AnalyticsService {
                 averageResolutionTime: 3.5,
                 customerSatisfactionScore: 4.2,
                 firstContactResolution: 75,
-                ticketVolume: [
-                    { month: '2023-08', count: 2 },
-                    { month: '2023-09', count: 3 },
-                    { month: '2023-10', count: 1 },
-                    { month: '2023-11', count: 2 }
-                ]
+                ticketVolume: {
+                    monthly: [
+                        { month: '2023-08', count: 2 },
+                        { month: '2023-09', count: 3 },
+                        { month: '2023-10', count: 1 },
+                        { month: '2023-11', count: 2 }
+                    ]
+                }
             },
             {
                 customerId: 'CUST002',
@@ -343,10 +345,12 @@ class AnalyticsService {
                 averageResolutionTime: 2.1,
                 customerSatisfactionScore: 4.8,
                 firstContactResolution: 100,
-                ticketVolume: [
-                    { month: '2023-09', count: 1 },
-                    { month: '2023-10', count: 2 }
-                ]
+                ticketVolume: {
+                    monthly: [
+                        { month: '2023-09', count: 1 },
+                        { month: '2023-10', count: 2 }
+                    ]
+                }
             }
         ];
     }
