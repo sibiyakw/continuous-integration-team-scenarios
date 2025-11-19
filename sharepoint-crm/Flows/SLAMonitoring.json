@@ -1,0 +1,480 @@
+{
+  "name": "CRM - SLA Monitoring and Escalation",
+  "description": "Monitors SLA compliance and automatically escalates tickets approaching or exceeding deadlines",
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared_sharepointonline",
+        "source": "builtIn",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+      },
+      "shared_office365": {
+        "connectionName": "shared_office365",
+        "source": "builtIn",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {},
+      "triggers": {
+        "Hourly_Monitoring": {
+          "type": "Recurrence",
+          "recurrence": {
+            "frequency": "Hour",
+            "interval": 1
+          }
+        }
+      },
+      "actions": {
+        "Initialize_Monitoring_Results": {
+          "type": "Scope",
+          "actions": {
+            "Initialize_WarningTickets": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "WarningTickets",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {}
+            },
+            "Initialize_BreachedTickets": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "BreachedTickets",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_WarningTickets": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Initialize_EscalatedTickets": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "EscalatedTickets",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_BreachedTickets": [
+                  "Succeeded"
+                ]
+              }
+            }
+          }
+        },
+        "Get_Active_Tickets": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Tickets",
+              "$filter": "Status ne 'Resolved' and Status ne 'Closed' and Status ne 'Escalated'"
+            }
+          },
+          "runAfter": {
+            "Initialize_Monitoring_Results": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Check_SLA_Status_for_Each_Ticket": {
+          "type": "Foreach",
+          "forEach": "@body('Get_Active_Tickets')?['value']",
+          "actions": {
+            "Calculate_SLA_Status": {
+              "type": "Compose",
+              "inputs": {
+                "HoursRemaining": "@div(sub(ticks(item()?['SLADeadline']), ticks(utcNow())), 36000000000)",
+                "PercentageUsed": "@div(sub(ticks(utcNow()), ticks(item()?['CreatedDate'])), sub(ticks(item()?['SLADeadline']), ticks(item()?['CreatedDate'])))",
+                "IsBreached": "@greater(utcNow(), item()?['SLADeadline'])",
+                "Priority": "@item()?['Priority']"
+              },
+              "runAfter": {}
+            },
+            "Determine_Alert_Level": {
+              "type": "Switch",
+              "expression": "@and(greater(outputs('Calculate_SLA_Status')?['HoursRemaining'], 0), greaterOrEquals(outputs('Calculate_SLA_Status')?['PercentageUsed'], 0.75))",
+              "cases": {
+                "Case_-_Warning_Level": {
+                  "case": "@greaterOrEquals(outputs('Calculate_SLA_Status')?['PercentageUsed'], 0.75)",
+                  "actions": {
+                    "Add_to_Warning_List": {
+                      "type": "Append_to_array_variable",
+                      "inputs": {
+                        "name": "WarningTickets",
+                        "value": {
+                          "TicketID": "@item()?['ID']",
+                          "TicketTitle": "@item()?['Title']",
+                          "Priority": "@item()?['Priority']",
+                          "AssignedTo": "@item()?['AssignedTo/Title']",
+                          "Customer": "@item()?['CustomerID/Title']",
+                          "HoursRemaining": "@outputs('Calculate_SLA_Status')?['HoursRemaining']",
+                          "PercentageUsed": "@outputs('Calculate_SLA_Status')?['PercentageUsed']"
+                        }
+                      },
+                      "runAfter": {}
+                    },
+                    "Check_if_Critical_Priority": {
+                      "type": "Condition",
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@item()?['Priority']",
+                              "Critical"
+                            ]
+                          },
+                          {
+                            "greaterOrEquals": [
+                              "@outputs('Calculate_SLA_Status')?['PercentageUsed']",
+                              0.9
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Add_to_Warning_List": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Send_Critical_Warning": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "parameters": {
+                          "to": "@item()?['AssignedTo/Email']",
+                          "subject": "🚨 URGENT: Critical SLA Warning - Ticket #{item()?['ID']}",
+                          "body": {
+                            "content": "<p>URGENT SLA WARNING</p><p>Your critical ticket is approaching SLA breach:</p><ul><li><strong>Ticket ID:</strong> #{item()?['ID']}</li><li><strong>Subject:</strong> @{item()?['Title']}</li><li><strong>Priority:</strong> @{item()?['Priority']}</li><li><strong>Customer:</strong> @{item()?['CustomerID/Title']}</li><li><strong>SLA Deadline:</strong> @{item()?['SLADeadline']}</li><li><strong>Time Remaining:</strong> @{formatNumber(outputs('Calculate_SLA_Status')?['HoursRemaining'], 'N1')} hours</li></ul><p><strong>IMMEDIATE ACTION REQUIRED:</strong></p><p>This critical ticket will breach SLA within the next hour. Please address immediately or escalate if needed.</p><p>Best regards,<br>CRM System</p>",
+                            "contentType": "Html"
+                          },
+                          "importance": "High"
+                        }
+                      },
+                      "runAfter": {
+                        "Check_if_Critical_Priority": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Copy_Warning_to_Standard": {
+                      "type": "Compose",
+                      "inputs": "@outputs('Calculate_SLA_Status')?['HoursRemaining']",
+                      "runAfter": {
+                        "Check_if_Critical_Priority": [
+                          "Succeeded",
+                          "Failed"
+                        ]
+                      }
+                    },
+                    "Send_Standard_Warning": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "parameters": {
+                          "to": "@item()?['AssignedTo/Email']",
+                          "subject": "SLA Warning - Ticket #{item()?['ID']}",
+                          "body": {
+                            "content": "<p>SLA Warning</p><p>Your ticket is approaching SLA deadline:</p><ul><li><strong>Ticket ID:</strong> #{item()?['ID']}</li><li><strong>Subject:</strong> @{item()?['Title']}</li><li><strong>Priority:</strong> @{item()?['Priority']}</li><li><strong>Customer:</strong> @{item()?['CustomerID/Title']}</li><li><strong>SLA Deadline:</strong> @{item()?['SLADeadline']}</li><li><strong>Time Remaining:</strong> @{formatNumber(outputs('Calculate_SLA_Status')?['HoursRemaining'], 'N1')} hours</li></ul><p>Please prioritize this ticket to ensure SLA compliance.</p><p>Best regards,<br>CRM System</p>",
+                            "contentType": "Html"
+                          },
+                          "importance": "Normal"
+                        }
+                      },
+                      "runAfter": {
+                        "Copy_Warning_to_Standard": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "actions": {
+                  "Check_for_Breach": {
+                    "type": "Condition",
+                    "expression": {
+                      "and": [
+                        {
+                          "greater": [
+                            "@utcNow()",
+                            "@item()?['SLADeadline']"
+                          ]
+                        }
+                      ]
+                    },
+                    "runAfter": {}
+                  },
+                  "Handle_SLA_Breach": {
+                    "type": "Scope",
+                    "actions": {
+                      "Add_to_Breach_List": {
+                        "type": "Append_to_array_variable",
+                        "inputs": {
+                          "name": "BreachedTickets",
+                          "value": {
+                            "TicketID": "@item()?['ID']",
+                            "TicketTitle": "@item()?['Title']",
+                            "Priority": "@item()?['Priority']",
+                            "AssignedTo": "@item()?['AssignedTo/Title']",
+                            "Customer": "@item()?['CustomerID/Title']",
+                            "HoursOverdue": "@div(sub(ticks(utcNow()), ticks(item()?['SLADeadline'])), 36000000000)"
+                          }
+                        },
+                        "runAfter": {}
+                      },
+                      "Escalate_Ticket": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "UpdateItem"
+                          },
+                          "parameters": {
+                            "dataset": "https://tenant.sharepoint.com/sites/crm",
+                            "table": "CRM Tickets",
+                            "id": "@item()?['ID']",
+                            "item": {
+                              "Status": "Escalated"
+                            }
+                          }
+                        },
+                        "runAfter": {
+                          "Add_to_Breach_List": [
+                            "Succeeded"
+                          ]
+                        }
+                      },
+                      "Log_Escalation": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "CreateItem"
+                          },
+                          "parameters": {
+                            "dataset": "https://tenant.sharepoint.com/sites/crm",
+                            "table": "CRM Ticket History",
+                            "item": {
+                              "Title": "SLA Breach - Ticket Escalated",
+                              "TicketID": "@item()?['ID']",
+                              "ActionType": "Escalated",
+                              "ActionedBy": "System",
+                              "Description": "Automatically escalated due to SLA breach. Ticket was @{formatNumber(outputs('Calculate_SLA_Status')?['HoursOverdue'], 'N1')} hours overdue.",
+                              "ActionDate": "@utcNow()",
+                              "Visibility": "Customer Visible",
+                              "IsSystemGenerated": true
+                            }
+                          }
+                        },
+                        "runAfter": {
+                          "Escalate_Ticket": [
+                            "Succeeded"
+                          ]
+                        }
+                      },
+                      "Notify_Assigned_Agent": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                            "connectionName": "shared_office365",
+                            "operationId": "SendEmailV2"
+                          },
+                          "parameters": {
+                            "to": "@item()?['AssignedTo/Email']",
+                            "subject": "🚨 URGENT: SLA BREACH - Ticket #{item()?['ID']} Automatically Escalated",
+                            "body": {
+                              "content": "<p><strong>URGENT: SLA BREACH DETECTED</strong></p><p>Your ticket has automatically been escalated due to SLA breach:</p><ul><li><strong>Ticket ID:</strong> #{item()?['ID']}</li><li><strong>Subject:</strong> @{item()?['Title']}</li><li><strong>Priority:</strong> @{item()?['Priority']}</li><li><strong>Customer:</strong> @{item()?['CustomerID/Title']}</li><li><strong>SLA Deadline:</strong> @{item()?['SLADeadline']}</li><li><strong>Breached By:</strong> @{formatNumber(outputs('Calculate_SLA_Status')?['HoursOverdue'], 'N1')} hours</li></ul><p><strong>Action Taken:</strong></p><p>The ticket has been automatically escalated to Team Lead for immediate attention.</p><p>Please review the situation and provide any necessary information to the Team Lead.</p><p>Best regards,<br>CRM System</p>",
+                              "contentType": "Html"
+                            },
+                            "importance": "High"
+                          }
+                        },
+                        "runAfter": {
+                          "Log_Escalation": [
+                            "Succeeded"
+                          ]
+                        }
+                      },
+                      "Notify_Team_Lead": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                            "connectionName": "shared_office365",
+                            "operationId": "SendEmailV2"
+                          },
+                          "parameters": {
+                            "to": "teamlead@company.com",
+                            "subject": "🚨 CRITICAL: SLA Breach - #{item()?['ID']} - Immediate Action Required",
+                            "body": {
+                              "content": "<p><strong>CRITICAL: AUTOMATIC SLA ESCALATION</strong></p><p>A ticket has automatically been escalated due to SLA breach:</p><ul><li><strong>Ticket ID:</strong> #{item()?['ID']}</li><li><strong>Subject:</strong> @{item()?['Title']}</li><li><strong>Priority:</strong> @{item()?['Priority']}</li><li><strong>Customer:</strong> @{item()?['CustomerID/Title']}</li><li><strong>Assigned Agent:</strong> @{item()?['AssignedTo/Title']}</li><li><strong>SLA Deadline:</strong> @{item()?['SLADeadline']}</li><li><strong>Breached By:</strong> @{formatNumber(outputs('Calculate_SLA_Status')?['HoursOverdue'], 'N1')} hours</li></ul><p><strong>Immediate Action Required:</strong></p><p>1. Contact the customer and apologize for the delay<br>2. Assess the ticket requirements<br>3. Reassign to appropriate resources<br>4. Ensure immediate resolution</p><p>This is a critical customer service issue that requires your immediate attention.</p><p>Best regards,<br>CRM System</p>",
+                              "contentType": "Html"
+                            },
+                            "importance": "High"
+                          }
+                        },
+                        "runAfter": {
+                          "Notify_Assigned_Agent": [
+                            "Succeeded"
+                          ]
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "Check_for_Breach": [
+                        "Succeeded"
+                      ]
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Calculate_SLA_Status": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Get_Active_Tickets": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Generate_Summary_Report": {
+          "type": "Compose",
+          "inputs": {
+            "Summary": {
+              "MonitoringTime": "@utcNow()",
+              "TotalActiveTickets": "@length(body('Get_Active_Tickets')?['value'])",
+              "WarningCount": "@length(variables('WarningTickets'))",
+              "BreachedCount": "@length(variables('BreachedTickets'))",
+              "EscalatedCount": "@length(variables('EscalatedTickets'))",
+              "WarningTickets": "@variables('WarningTickets')",
+              "BreachedTickets": "@variables('BreachedTickets')"
+            }
+          },
+          "runAfter": {
+            "Check_SLA_Status_for_Each_Ticket": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Check_if_Immediate_Notification_Required": {
+          "type": "Condition",
+          "expression": {
+            "or": [
+              {
+                "greater": [
+                  "@length(variables('BreachedTickets'))",
+                  0
+                ]
+              },
+              {
+                "greater": [
+                  "@length(variables('WarningTickets'))",
+                  0
+                ]
+              }
+            ]
+          },
+          "runAfter": {
+            "Generate_Summary_Report": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Send_Management_Summary": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "parameters": {
+              "to": "manager@company.com,teamlead@company.com",
+              "subject": "SLA Monitoring Alert - @{if(greater(length(variables('BreachedTickets')), 0), '🚨 BREACHES DETECTED', '⚠️ Warnings Issued')}",
+              "body": {
+                "content": "<p><strong>SLA Monitoring Report</strong></p><p><strong>Generated:</strong> @{utcNow()}</p><p><strong>Summary:</strong></p><ul><li><strong>Total Active Tickets:</strong> @{length(body('Get_Active_Tickets')?['value'])}</li><li><strong>SLA Warnings:</strong> @{length(variables('WarningTickets']))}</li><li><strong>SLA Breaches:</strong> @{length(variables('BreachedTickets']))}</li><li><strong>Automatic Escalations:</strong> @{length(variables('EscalatedTickets']))}</li></ul>@{if(greater(length(variables('BreachedTickets')), 0), '<p><strong>🚨 CRITICAL - SLA Breaches:</strong></p>' & join(variables('BreachedTickets'), '<br>'), '')}@{if(greater(length(variables('WarningTickets')), 0), '<p><strong>⚠️ SLA Warnings:</strong></p>' & join(variables('WarningTickets'), '<br>'), '')}<p>Please review the current ticket status and take appropriate action if needed.</p><p>You can access the CRM dashboard here: <a href=\"https://tenant.sharepoint.com/sites/crm\">CRM Dashboard</a></p><p>Best regards,<br>CRM Monitoring System</p>",
+                "contentType": "Html"
+              },
+              "importance": "@if(greater(length(variables('BreachedTickets')), 0), 'High', 'Normal')"
+            }
+          },
+          "runAfter": {
+            "Check_if_Immediate_Notification_Required": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Log_Monitoring_Results": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Ticket History",
+              "item": {
+                "Title": "SLA Monitoring Run - @{utcNow()}",
+                "ActionType": "System Monitoring",
+                "ActionedBy": "System",
+                "Description": "SLA monitoring completed. Warnings: @{length(variables('WarningTickets'])}, Breaches: @{length(variables('BreachedTickets'])}, Escalations: @{length(variables('EscalatedTickets'])}.",
+                "ActionDate": "@utcNow()",
+                "Visibility": "Internal",
+                "IsSystemGenerated": true
+              }
+            }
+          },
+          "runAfter": {
+            "Send_Management_Summary": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    }
+  }
+}
