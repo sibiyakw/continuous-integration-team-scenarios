@@ -1,12 +1,15 @@
 {
-  "name": "backend",
+  "name": "crm-power-app-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Backend for CRM Power App with Microsoft integration",
+  "main": "dist/index.js",
   "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon src/index.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["crm", "microsoft", "power-platform"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
