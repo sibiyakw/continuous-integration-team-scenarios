@@ -1,0 +1,639 @@
+{
+  "name": "CRM - Customer Communications",
+  "description": "Manages all customer communications including notifications, updates, and satisfaction surveys",
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared_sharepointonline",
+        "source": "builtIn",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+      },
+      "shared_office365": {
+        "connectionName": "shared_office365",
+        "source": "builtIn",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365"
+      },
+      "shared_microsoftforms": {
+        "connectionName": "shared_microsoftforms",
+        "source": "builtIn",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {},
+      "triggers": {
+        "When_an_item_is_updated": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "OnUpdateItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Tickets"
+            }
+          }
+        }
+      },
+      "actions": {
+        "Get_Changed_Fields": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Tickets",
+              "id": "@triggerOutputs()?['body/ID']"
+            }
+          },
+          "runAfter": {}
+        },
+        "Get_Previous_Status": {
+          "type": "Compose",
+          "inputs": "@triggerOutputs()?['body/Status']",
+          "runAfter": {
+            "Get_Changed_Fields": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Get_Current_Status": {
+          "type": "Compose",
+          "inputs": "@body('Get_Changed_Fields')?['Status']",
+          "runAfter": {
+            "Get_Previous_Status": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Check_Status_Changed": {
+          "type": "Condition",
+          "expression": {
+            "and": [
+              {
+                "notEquals": [
+                  "@outputs('Get_Previous_Status')",
+                  "@outputs('Get_Current_Status')"
+                ]
+              }
+            ]
+          },
+          "runAfter": {
+            "Get_Current_Status": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_Communication_Context": {
+          "type": "Scope",
+          "actions": {
+            "Initialize_Email_Recipients": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "EmailRecipients",
+                    "type": "string",
+                    "value": "@body('Get_Changed_Fields')?['CustomerID/Email']"
+                  }
+                ]
+              },
+              "runAfter": {}
+            },
+            "Initialize_Email_Subject": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "EmailSubject",
+                    "type": "string",
+                    "value": "Your ticket status has been updated - #{@triggerOutputs()?['body/ID']}"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Email_Recipients": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Initialize_Email_Body": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "EmailBody",
+                    "type": "string",
+                    "value": ""
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Email_Subject": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Check_Status_Changed": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Determine_Communication_Type": {
+          "type": "Switch",
+          "expression": "@outputs('Get_Current_Status')",
+          "cases": {
+            "Case_-_In_Progress": {
+              "case": "In Progress",
+              "actions": {
+                "Set_In_Progress_Content": {
+                  "type": "Scope",
+                  "actions": {
+                    "Update_Email_Subject": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailSubject",
+                        "value": "We're working on your ticket - #{@triggerOutputs()?['body/ID']}"
+                      },
+                      "runAfter": {}
+                    },
+                    "Update_Email_Body": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailBody",
+                        "value": "<p>Dear @{body('Get_Changed_Fields')?['CustomerID/ContactName']},</p><p>Good news! Your support ticket is now being actively worked on.</p><p><strong>Ticket Details:</strong></p><ul><li><strong>Ticket ID:</strong> #{@triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{body('Get_Changed_Fields')?['Title']}</li><li><strong>Status:</strong> In Progress</li><li><strong>Assigned Agent:</strong> @{body('Get_Changed_Fields')?['AssignedTo/Title']}</li><li><strong>Priority:</strong> @{body('Get_Changed_Fields')?['Priority']}</li></ul><p><strong>What's Next:</strong></p><p>Our team is actively working to resolve your issue. We'll keep you updated on our progress.</p><p>If you have any additional information or questions, please don't hesitate to respond to this email or access the customer portal.</p><p>Thank you for your patience.</p><p>Best regards,<br>Support Team</p>"
+                      },
+                      "runAfter": {
+                        "Update_Email_Subject": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Log_In_Progress_Notification": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "CreateItem"
+                        },
+                        "parameters": {
+                          "dataset": "https://tenant.sharepoint.com/sites/crm",
+                          "table": "CRM Ticket History",
+                          "item": {
+                            "Title": "Customer notification sent - Ticket in progress",
+                            "TicketID": "@triggerOutputs()?['body/ID']",
+                            "ActionType": "Customer Contact",
+                            "ActionedBy": "System",
+                            "Description": "Automatic email sent to customer notifying that ticket is now in progress.",
+                            "ActionDate": "@utcNow()",
+                            "Visibility": "Customer Visible",
+                            "IsSystemGenerated": true
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Update_Email_Body": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "runAfter": {}
+                }
+              }
+            },
+            "Case_-_Waiting_for_Customer": {
+              "case": "Waiting for Customer",
+              "actions": {
+                "Set_Waiting_Content": {
+                  "type": "Scope",
+                  "actions": {
+                    "Update_Email_Subject": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailSubject",
+                        "value": "Action Required - #{@triggerOutputs()?['body/ID']}"
+                      },
+                      "runAfter": {}
+                    },
+                    "Update_Email_Body": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailBody",
+                        "value": "<p>Dear @{body('Get_Changed_Fields')?['CustomerID/ContactName']},</p><p>We need your assistance to continue working on your support ticket.</p><p><strong>Ticket Details:</strong></p><ul><li><strong>Ticket ID:</strong> #{@triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{body('Get_Changed_Fields')?['Title']}</li><li><strong>Status:</strong> Waiting for Customer</li><li><strong>Assigned Agent:</strong> @{body('Get_Changed_Fields')?['AssignedTo/Title']}</li></ul><p><strong>Action Required:</strong></p><p>Our team needs additional information or confirmation from you to proceed with resolving your ticket.</p><p>Please review the latest updates in the customer portal and provide the requested information as soon as possible.</p><p><strong>How to Respond:</strong></p><ul><li>Log into the Customer Portal</li><li>View your ticket details</li><li>Add comments or upload requested files</li></ul><p>If you have any questions or need clarification, please don't hesitate to contact us.</p><p>Best regards,<br>Support Team</p>"
+                      },
+                      "runAfter": {
+                        "Update_Email_Subject": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Log_Waiting_Notification": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "CreateItem"
+                        },
+                        "parameters": {
+                          "dataset": "https://tenant.sharepoint.com/sites/crm",
+                          "table": "CRM Ticket History",
+                          "item": {
+                            "Title": "Customer notification sent - Action required from customer",
+                            "TicketID": "@triggerOutputs()?['body/ID']",
+                            "ActionType": "Customer Contact",
+                            "ActionedBy": "System",
+                            "Description": "Automatic email sent to customer requesting information/confirmation.",
+                            "ActionDate": "@utcNow()",
+                            "Visibility": "Customer Visible",
+                            "IsSystemGenerated": true
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Update_Email_Body": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "runAfter": {}
+                }
+              }
+            },
+            "Case_-_Resolved": {
+              "case": "Resolved",
+              "actions": {
+                "Set_Resolved_Content": {
+                  "type": "Scope",
+                  "actions": {
+                    "Update_Email_Subject": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailSubject",
+                        "value": "Your ticket has been resolved - #{@triggerOutputs()?['body/ID']}"
+                      },
+                      "runAfter": {}
+                    },
+                    "Update_Email_Body": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailBody",
+                        "value": "<p>Dear @{body('Get_Changed_Fields')?['CustomerID/ContactName']},</p><p>Great news! Your support ticket has been marked as resolved.</p><p><strong>Ticket Details:</strong></p><ul><li><strong>Ticket ID:</strong> #{@triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{body('Get_Changed_Fields')?['Title']}</li><li><strong>Status:</strong> Resolved</li><li><strong>Resolved By:</strong> @{body('Get_Changed_Fields')?['AssignedTo/Title']}</li><li><strong>Resolution Date:</strong> @{body('Get_Changed_Fields')?['ResolvedDate']}</li></ul><p><strong>Resolution Summary:</strong></p><p>@{body('Get_Changed_Fields')?['ResolutionNotes']}</p><p><strong>Next Steps:</strong></p><p>Please log into the Customer Portal to review the resolution and confirm that your issue has been successfully resolved.</p><p>If you feel that the issue is not completely resolved or if you have any questions, please don't hesitate to reopen the ticket or contact us.</p><p><strong>Satisfaction Survey:</strong></p><p>Within the next 24 hours, you'll receive a short satisfaction survey about your support experience. Your feedback helps us improve our service.</p><p>Thank you for your patience and for giving us the opportunity to assist you.</p><p>Best regards,<br>Support Team</p>"
+                      },
+                      "runAfter": {
+                        "Update_Email_Subject": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Schedule_Satisfaction_Survey": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "CreateItem"
+                        },
+                        "parameters": {
+                          "dataset": "https://tenant.sharepoint.com/sites/crm",
+                          "table": "CRM Ticket History",
+                          "item": {
+                            "Title": "Customer notification sent - Ticket resolved",
+                            "TicketID": "@triggerOutputs()?['body/ID']",
+                            "ActionType": "Customer Contact",
+                            "ActionedBy": "System",
+                            "Description": "Automatic email sent to customer notifying of ticket resolution. Satisfaction survey scheduled for 24 hours.",
+                            "ActionDate": "@utcNow()",
+                            "Visibility": "Customer Visible",
+                            "IsSystemGenerated": true
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Update_Email_Body": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Delay_for_Satisfaction_Survey": {
+                      "type": "Delay",
+                      "inputs": {
+                        "interval": {
+                          "count": 1,
+                          "unit": "Day"
+                        }
+                      },
+                      "runAfter": {
+                        "Schedule_Satisfaction_Survey": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Send_Satisfaction_Survey": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "parameters": {
+                          "to": "@body('Get_Changed_Fields')?['CustomerID/Email']",
+                          "subject": "How was your support experience? - #{@triggerOutputs()?['body/ID']}",
+                          "body": {
+                            "content": "<p>Dear @{body('Get_Changed_Fields')?['CustomerID/ContactName']},</p><p>Thank you for giving us the opportunity to assist you with your recent support request.</p><p>We'd love to hear about your experience to help us improve our service.</p><p><strong>Ticket Details:</strong></p><ul><li><strong>Ticket ID:</strong> #{@triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{body('Get_Changed_Fields')?['Title']}</li></ul><p><strong>Customer Satisfaction Survey:</strong></p><p>Please take 2-3 minutes to complete our satisfaction survey:</p><p><a href=\"https://forms.office.com/r/survey-id\">Click here to take the survey</a></p><p>Your feedback is valuable and helps us:</p><ul><li>Improve our support processes</li><li>Train our team better</li><li>Enhance our customer service</li></ul><p>Thank you for your time and feedback.</p><p>Best regards,<br>Customer Support Team</p>",
+                            "contentType": "Html"
+                          },
+                          "importance": "Normal"
+                        }
+                      },
+                      "runAfter": {
+                        "Delay_for_Satisfaction_Survey": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Log_Satisfaction_Survey": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "CreateItem"
+                        },
+                        "parameters": {
+                          "dataset": "https://tenant.sharepoint.com/sites/crm",
+                          "table": "CRM Ticket History",
+                          "item": {
+                            "Title": "Satisfaction survey sent to customer",
+                            "TicketID": "@triggerOutputs()?['body/ID']",
+                            "ActionType": "Customer Contact",
+                            "ActionedBy": "System",
+                            "Description": "Automatic satisfaction survey sent 24 hours after ticket resolution.",
+                            "ActionDate": "@utcNow()",
+                            "Visibility": "Internal",
+                            "IsSystemGenerated": true
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Send_Satisfaction_Survey": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "runAfter": {}
+                }
+              }
+            },
+            "Case_-_Closed": {
+              "case": "Closed",
+              "actions": {
+                "Set_Closed_Content": {
+                  "type": "Scope",
+                  "actions": {
+                    "Update_Email_Subject": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailSubject",
+                        "value": "Your ticket has been closed - #{@triggerOutputs()?['body/ID']}"
+                      },
+                      "runAfter": {}
+                    },
+                    "Update_Email_Body": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailBody",
+                        "value": "<p>Dear @{body('Get_Changed_Fields')?['CustomerID/ContactName']},</p><p>Your support ticket has been closed.</p><p><strong>Ticket Details:</strong></p><ul><li><strong>Ticket ID:</strong> #{@triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{body('Get_Changed_Fields')?['Title']}</li><li><strong>Status:</strong> Closed</li><li><strong>Closed By:</strong> @{body('Get_Changed_Fields')?['AssignedTo/Title']}</li></ul><p><strong>Summary:</strong></p><p>This ticket has been successfully resolved and is now closed. All activities and communications related to this ticket have been completed.</p><p>If you need to reopen this ticket or have any questions, please don't hesitate to contact our support team or create a new ticket through the Customer Portal.</p><p>Thank you for choosing our support services.</p><p>Best regards,<br>Support Team</p>"
+                      },
+                      "runAfter": {
+                        "Update_Email_Subject": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Log_Closed_Notification": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "CreateItem"
+                        },
+                        "parameters": {
+                          "dataset": "https://tenant.sharepoint.com/sites/crm",
+                          "table": "CRM Ticket History",
+                          "item": {
+                            "Title": "Customer notification sent - Ticket closed",
+                            "TicketID": "@triggerOutputs()?['body/ID']",
+                            "ActionType": "Customer Contact",
+                            "ActionedBy": "System",
+                            "Description": "Automatic email sent to customer notifying that ticket has been closed.",
+                            "ActionDate": "@utcNow()",
+                            "Visibility": "Customer Visible",
+                            "IsSystemGenerated": true
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Update_Email_Body": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "runAfter": {}
+                }
+              }
+            },
+            "Case_-_Escalated": {
+              "case": "Escalated",
+              "actions": {
+                "Set_Escalated_Content": {
+                  "type": "Scope",
+                  "actions": {
+                    "Update_Email_Subject": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailSubject",
+                        "value": "Your ticket has been escalated - #{@triggerOutputs()?['body/ID']}"
+                      },
+                      "runAfter": {}
+                    },
+                    "Update_Email_Body": {
+                      "type": "Set_variable",
+                      "inputs": {
+                        "name": "EmailBody",
+                        "value": "<p>Dear @{body('Get_Changed_Fields')?['CustomerID/ContactName']},</p><p>Your support ticket has been escalated to ensure it receives the attention it requires.</p><p><strong>Ticket Details:</strong></p><ul><li><strong>Ticket ID:</strong> #{@triggerOutputs()?['body/ID']}</li><li><strong>Subject:</strong> @{body('Get_Changed_Fields')?['Title']}</li><li><strong>Status:</strong> Escalated</li><li><strong>Priority:</strong> @{body('Get_Changed_Fields')?['Priority']}</li></ul><p><strong>What This Means:</strong></p><p>Your ticket has been escalated to our senior support team or management to ensure it receives immediate and focused attention. This typically happens when:</p><ul><li>The issue requires specialized expertise</li><li>The ticket requires priority attention</li><li>The SLA deadline is approaching or has been exceeded</li></ul><p><strong>Next Steps:</strong></p><p>Our senior team will review your ticket immediately and either:</p><ul><li>Take over the resolution process directly</li><li>Provide additional resources to resolve your issue quickly</li><li>Contact you directly if more information is needed</li></ul><p>We apologize for any inconvenience and appreciate your patience. Your satisfaction is our top priority.</p><p>You can expect to hear from us very soon with an update on your ticket.</p><p>Best regards,<br>Support Team</p>"
+                      },
+                      "runAfter": {
+                        "Update_Email_Subject": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Add_Management_to_Recipients": {
+                      "type": "Append_to_string_variable",
+                      "inputs": {
+                        "name": "EmailRecipients",
+                        "value": ";teamlead@company.com;manager@company.com"
+                      },
+                      "runAfter": {
+                        "Update_Email_Body": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Log_Escalation_Notification": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "CreateItem"
+                        },
+                        "parameters": {
+                          "dataset": "https://tenant.sharepoint.com/sites/crm",
+                          "table": "CRM Ticket History",
+                          "item": {
+                            "Title": "Customer notification sent - Ticket escalated",
+                            "TicketID": "@triggerOutputs()?['body/ID']",
+                            "ActionType": "Customer Contact",
+                            "ActionedBy": "System",
+                            "Description": "Automatic email sent to customer and management team notifying of ticket escalation.",
+                            "ActionDate": "@utcNow()",
+                            "Visibility": "Customer Visible",
+                            "IsSystemGenerated": true
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Add_Management_to_Recipients": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "runAfter": {}
+                }
+              }
+            }
+          },
+          "default": {
+            "actions": {
+              "Skip_Communication": {
+                "type": "Compose",
+                "inputs": "No customer communication required for this status change",
+                "runAfter": {}
+              },
+              "Log_Skip_Communication": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "CreateItem"
+                  },
+                  "parameters": {
+                    "dataset": "https://tenant.sharepoint.com/sites/crm",
+                    "table": "CRM Ticket History",
+                    "item": {
+                      "Title": "Status change - No customer notification sent",
+                      "TicketID": "@triggerOutputs()?['body/ID']",
+                      "ActionType": "Status Changed",
+                      "ActionedBy": "System",
+                      "Description": "Ticket status changed from @{outputs('Get_Previous_Status')} to @{outputs('Get_Current_Status')}. No customer notification required.",
+                      "ActionDate": "@utcNow()",
+                      "Visibility": "Internal",
+                      "IsSystemGenerated": true
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Skip_Communication": [
+                    "Succeeded"
+                  ]
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Communication_Context": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Send_Customer_Notification": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "parameters": {
+              "to": "@variables('EmailRecipients')",
+              "subject": "@variables('EmailSubject')",
+              "body": {
+                "content": "@variables('EmailBody')",
+                "contentType": "Html"
+              },
+              "importance": "Normal"
+            }
+          },
+          "runAfter": {
+            "Determine_Communication_Type": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Update_Status_Change_History": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateItem"
+            },
+            "parameters": {
+              "dataset": "https://tenant.sharepoint.com/sites/crm",
+              "table": "CRM Ticket History",
+              "item": {
+                "Title": "Status changed from @{outputs('Get_Previous_Status')} to @{outputs('Get_Current_Status')}",
+                "TicketID": "@triggerOutputs()?['body/ID']",
+                "ActionType": "Status Changed",
+                "ActionedBy": "@body('Get_Changed_Fields')?['ModifiedBy/Email']",
+                "PreviousValue": "@outputs('Get_Previous_Status')",
+                "NewValue": "@outputs('Get_Current_Status')",
+                "Description": "Ticket status updated from @{outputs('Get_Previous_Status')} to @{outputs('Get_Current_Status')} by @{body('Get_Changed_Fields')?['ModifiedBy/Title']}.",
+                "ActionDate": "@utcNow()",
+                "Visibility": "Customer Visible",
+                "IsSystemGenerated": false
+              }
+            }
+          },
+          "runAfter": {
+            "Send_Customer_Notification": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    }
+  }
+}
