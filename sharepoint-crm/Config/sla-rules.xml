@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SLARules xmlns="http://schemas.microsoft.com/sharepoint/2014/app">
+  <!-- SharePoint CRM SLA Rules Configuration -->
+  <!-- This file defines the default Service Level Agreement rules for the CRM system -->
+
+  <!-- Default SLA Rules by Priority -->
+  <SLAConfiguration>
+    <!-- Critical Priority SLA Rules -->
+    <SLARule ID="SLA-CRITICAL-DEFAULT" Name="Critical Priority Default">
+      <Priority>Critical</Priority>
+      <Category>All</Category>
+      <AccountType>All</AccountType>
+      <BusinessHoursOnly>true</BusinessHoursOnly>
+      <BusinessHours>
+        <Schedule>Monday-Friday: 00:00-23:59</Schedule>
+        <Schedule>Saturday-Sunday: 00:00-23:59</Schedule>
+        <Holidays>Follows company calendar holidays</Holidays>
+      </BusinessHours>
+
+      <!-- Response Times (in hours) -->
+      <ResponseTime>
+        <Acknowledgement>0.25</Acknowledgement> <!-- 15 minutes -->
+        <FirstResponse>1</FirstResponse> <!-- 1 hour -->
+        <InitialAssessment>2</InitialAssessment> <!-- 2 hours -->
+      </ResponseTime>
+
+      <!-- Resolution Times (in hours) -->
+      <ResolutionTime>
+        <Target>4</Target> <!-- 4 hours -->
+        <Maximum>8</Maximum> <!-- 8 hours absolute maximum -->
+        <CustomerEscalation>2</CustomerEscalation> <!-- Escalate if not acknowledged in 2 hours -->
+      </ResolutionTime>
+
+      <!-- Warning and Escalation Settings -->
+      <WarningSettings>
+        <WarningThreshold>75</WarningThreshold> <!-- 75% of time elapsed -->
+        <CriticalThreshold>90</CriticalThreshold> <!-- 90% of time elapsed -->
+        <EscalationTrigger>
+          <Trigger Name="No Acknowledgement" Time="0.5" /> <!-- 30 minutes -->
+          <Trigger Name="No FirstResponse" Time="1.5" /> <!-- 1.5 hours -->
+          <Trigger Name="ApproachingDeadline" Time="3" /> <!-- 3 hours -->
+        </EscalationTrigger>
+      </WarningSettings>
+
+      <!-- Escalation Rules -->
+      <EscalationRules>
+        <Level Order="1" Name="Team Lead" TriggerTime="0.5" NotificationType="Immediate">
+          <NotificationMethods>
+            <Method>Email</Method>
+            <Method>Teams</Method>
+            <Method>MobileApp</Method>
+          </NotificationMethods>
+        </Level>
+        <Level Order="2" Name="Manager" TriggerTime="2" NotificationType="Immediate">
+          <NotificationMethods>
+            <Method>Email</Method>
+            <Method>Phone</Method>
+            <Method>ExecutiveAlert</Method>
+          </NotificationMethods>
+        </Level>
+      </EscalationRules>
+
+      <!-- Customer Communication Rules -->
+      <CustomerCommunication>
+        <AutoResponse>true</AutoResponse>
+        <ResponseTemplate>critical-ticket-acknowledgment</ResponseTemplate>
+        <ProgressUpdates>
+          <Update Interval="2" Enabled="true" /> <!-- Update every 2 hours -->
+          <Update Interval="24" Enabled="false" /> <!-- No daily updates for critical -->
+        </ProgressUpdates>
+      </CustomerCommunication>
+
+      <!-- Quality Assurance -->
+      <QualityAssurance>
+        <Required>true</Required>
+        <ReviewBy>Manager</ReviewBy>
+        <ReviewTime>0.5</ReviewTime> <!-- 30 minutes after resolution -->
+        <SatisfactionSurvey>true</SatisfactionSurvey>
+        <SurveyDelay>0.5</SurveyDelay> <!-- Send 30 minutes after resolution -->
+      </QualityAssurance>
+    </SLARule>
+
+    <!-- High Priority SLA Rules -->
+    <SLARule ID="SLA-HIGH-DEFAULT" Name="High Priority Default">
+      <Priority>High</Priority>
+      <Category>All</Category>
+      <AccountType>All</AccountType>
+      <BusinessHoursOnly>true</BusinessHoursOnly>
+      <BusinessHours>
+        <Schedule>Monday-Friday: 09:00-18:00</Schedule>
+        <Schedule>Saturday-Sunday: 10:00-16:00</Schedule>
+        <Holidays>Follows company calendar holidays</Holidays>
+      </BusinessHours>
+
+      <!-- Response Times -->
+      <ResponseTime>
+        <Acknowledgement>0.5</Acknowledgement> <!-- 30 minutes -->
+        <FirstResponse>2</FirstResponse> <!-- 2 hours -->
+        <InitialAssessment>4</InitialAssessment> <!-- 4 hours -->
+      </ResponseTime>
+
+      <!-- Resolution Times -->
+      <ResolutionTime>
+        <Target>8</Target> <!-- 8 hours -->
+        <Maximum>16</Maximum> <!-- 16 hours absolute maximum -->
+        <CustomerEscalation>4</CustomerEscalation> <!-- Escalate if not acknowledged in 4 hours -->
+      </ResolutionTime>
+
+      <!-- Warning and Escalation Settings -->
+      <WarningSettings>
+        <WarningThreshold>75</WarningThreshold>
+        <CriticalThreshold>90</CriticalThreshold>
+        <EscalationTrigger>
+          <Trigger Name="No Acknowledgement" Time="1" />
+          <Trigger Name="No FirstResponse" Time="3" />
+          <Trigger Name="ApproachingDeadline" Time="6" />
+        </EscalationTrigger>
+      </WarningSettings>
+
+      <!-- Escalation Rules -->
+      <EscalationRules>
+        <Level Order="1" Name="Team Lead" TriggerTime="1" NotificationType="Immediate">
+          <NotificationMethods>
+            <Method>Email</Method>
+            <Method>Teams</Method>
+          </NotificationMethods>
+        </Level>
+        <Level Order="2" Name="Manager" TriggerTime="4" NotificationType="Immediate">
+          <NotificationMethods>
+            <Method>Email</Method>
+            <Method>Phone</Method>
+          </NotificationMethods>
+        </Level>
+      </EscalationRules>
+
+      <!-- Customer Communication -->
+      <CustomerCommunication>
+        <AutoResponse>true</AutoResponse>
+        <ResponseTemplate>high-ticket-acknowledgment</ResponseTemplate>
+        <ProgressUpdates>
+          <Update Interval="4" Enabled="true" />
+          <Update Interval="24" Enabled="true" />
+        </ProgressUpdates>
+      </CustomerCommunication>
+
+      <!-- Quality Assurance -->
+      <QualityAssurance>
+        <Required>true</Required>
+        <ReviewBy>TeamLead</ReviewBy>
+        <ReviewTime>2</ReviewTime> <!-- 2 hours after resolution -->
+        <SatisfactionSurvey>true</SatisfactionSurvey>
+        <SurveyDelay>2</SurveyDelay> <!-- Send 2 hours after resolution -->
+      </QualityAssurance>
+    </SLARule>
+
+    <!-- Medium Priority SLA Rules -->
+    <SLARule ID="SLA-MEDIUM-DEFAULT" Name="Medium Priority Default">
+      <Priority>Medium</Priority>
+      <Category>All</Category>
+      <AccountType>All</AccountType>
+      <BusinessHoursOnly>true</BusinessHoursOnly>
+      <BusinessHours>
+        <Schedule>Monday-Friday: 09:00-18:00</Schedule>
+        <Schedule>Saturday-Sunday: Closed</Schedule>
+        <Holidays>Follows company calendar holidays</Holidays>
+      </BusinessHours>
+
+      <!-- Response Times -->
+      <ResponseTime>
+        <Acknowledgement>2</Acknowledgement> <!-- 2 hours -->
+        <FirstResponse>4</FirstResponse> <!-- 4 hours -->
+        <InitialAssessment>8</InitialAssessment> <!-- 8 hours -->
+      </ResponseTime>
+
+      <!-- Resolution Times -->
+      <ResolutionTime>
+        <Target>24</Target> <!-- 24 hours (1 business day) -->
+        <Maximum>48</Maximum> <!-- 48 hours absolute maximum -->
+        <CustomerEscalation>8</CustomerEscalation> <!-- Escalate if not acknowledged in 8 hours -->
+      </ResolutionTime>
+
+      <!-- Warning and Escalation Settings -->
+      <WarningSettings>
+        <WarningThreshold>75</WarningThreshold>
+        <CriticalThreshold>90</CriticalThreshold>
+        <EscalationTrigger>
+          <Trigger Name="No Acknowledgement" Time="4" />
+          <Trigger Name="No FirstResponse" Time="8" />
+          <Trigger Name="ApproachingDeadline" Time="18" />
+        </EscalationTrigger>
+      </WarningSettings>
+
+      <!-- Escalation Rules -->
+      <EscalationRules>
+        <Level Order="1" Name="Team Lead" TriggerTime="4" NotificationType="Batch">
+          <NotificationMethods>
+            <Method>Email</Method>
+          </NotificationMethods>
+        </Level>
+        <Level Order="2" Name="Manager" TriggerTime="8" NotificationType="Batch">
+          <NotificationMethods>
+            <Method>Email</Method>
+          </NotificationMethods>
+        </Level>
+      </EscalationRules>
+
+      <!-- Customer Communication -->
+      <CustomerCommunication>
+        <AutoResponse>true</AutoResponse>
+        <ResponseTemplate>medium-ticket-acknowledgment</ResponseTemplate>
+        <ProgressUpdates>
+          <Update Interval="8" Enabled="true" />
+          <Update Interval="24" Enabled="true" />
+        </ProgressUpdates>
+      </CustomerCommunication>
+
+      <!-- Quality Assurance -->
+      <QualityAssurance>
+        <Required>false</Required>
+        <ReviewBy>None</ReviewBy>
+        <SatisfactionSurvey>true</SatisfactionSurvey>
+        <SurveyDelay>24</SurveyDelay> <!-- Send 24 hours after resolution -->
+      </QualityAssurance>
+    </SLARule>
+
+    <!-- Low Priority SLA Rules -->
+    <SLARule ID="SLA-LOW-DEFAULT" Name="Low Priority Default">
+      <Priority>Low</Priority>
+      <Category>All</Category>
+      <AccountType>All</AccountType>
+      <BusinessHoursOnly>true</BusinessHoursOnly>
+      <BusinessHours>
+        <Schedule>Monday-Friday: 09:00-18:00</Schedule>
+        <Schedule>Saturday-Sunday: Closed</Schedule>
+        <Holidays>Follows company calendar holidays</Holidays>
+      </BusinessHours>
+
+      <!-- Response Times -->
+      <ResponseTime>
+        <Acknowledgement>8</Acknowledgement> <!-- 8 hours -->
+        <FirstResponse>16</FirstResponse> <!-- 16 hours -->
+        <InitialAssessment>24</InitialAssessment> <!-- 24 hours -->
+      </ResponseTime>
+
+      <!-- Resolution Times -->
+      <ResolutionTime>
+        <Target>72</Target> <!-- 72 hours (3 business days) -->
+        <Maximum>120</Maximum> <!-- 120 hours absolute maximum -->
+        <CustomerEscalation>24</CustomerEscalation> <!-- Escalate if not acknowledged in 24 hours -->
+      </ResolutionTime>
+
+      <!-- Warning and Escalation Settings -->
+      <WarningSettings>
+        <WarningThreshold>75</WarningThreshold>
+        <CriticalThreshold>90</CriticalThreshold>
+        <EscalationTrigger>
+          <Trigger Name="No Acknowledgement" Time="16" />
+          <Trigger Name="No FirstResponse" Time="24" />
+          <Trigger Name="ApproachingDeadline" Time="60" />
+        </EscalationTrigger>
+      </WarningSettings>
+
+      <!-- Escalation Rules -->
+      <EscalationRules>
+        <Level Order="1" Name="Team Lead" TriggerTime="16" NotificationType="Batch">
+          <NotificationMethods>
+            <Method>Email</Method>
+          </NotificationMethods>
+        </Level>
+        <Level Order="2" Name="Manager" TriggerTime="24" NotificationType="Batch">
+          <NotificationMethods>
+            <Method>Email</Method>
+          </NotificationMethods>
+        </Level>
+      </EscalationRules>
+
+      <!-- Customer Communication -->
+      <CustomerCommunication>
+        <AutoResponse>true</AutoResponse>
+        <ResponseTemplate>low-ticket-acknowledgment</ResponseTemplate>
+        <ProgressUpdates>
+          <Update Interval="24" Enabled="true" />
+        </ProgressUpdates>
+      </CustomerCommunication>
+
+      <!-- Quality Assurance -->
+      <QualityAssurance>
+        <Required>false</Required>
+        <ReviewBy>None</ReviewBy>
+        <SatisfactionSurvey>false</SatisfactionSurvey>
+      </QualityAssurance>
+    </SLARule>
+  </SLAConfiguration>
+
+  <!-- Account Type Specific SLA Adjustments -->
+  <AccountTypeAdjustments>
+    <!-- Enterprise Customer Adjustments -->
+    <Adjustment AccountType="Enterprise" Name="Enterprise Priority Adjustment">
+      <PriorityAdjustments>
+        <Priority From="Low" To="Medium" />
+        <Priority From="Medium" To="High" />
+      </PriorityAdjustments>
+      <TimeAdjustments Factor="0.8"> <!-- 20% faster response -->
+        <AffectedPriority>Critical,High,Medium,Low</AffectedPriority>
+      </TimeAdjustments>
+      <AdditionalFeatures>
+        <Feature>DedicatedSupport</Feature>
+        <Feature>ProactiveMonitoring</Feature>
+        <Feature>MonthlyReviews</Feature>
+      </AdditionalFeatures>
+    </Adjustment>
+
+    <!-- Premium Customer Adjustments -->
+    <Adjustment AccountType="Premium" Name="Premium Priority Adjustment">
+      <PriorityAdjustments>
+        <Priority From="Low" To="Medium" />
+      </PriorityAdjustments>
+      <TimeAdjustments Factor="0.9"> <!-- 10% faster response -->
+        <AffectedPriority>Medium,Low</AffectedPriority>
+      </TimeAdjustments>
+      <AdditionalFeatures>
+        <Feature>PriorityQueue</Feature>
+        <Feature>WeeklyReports</Feature>
+      </AdditionalFeatures>
+    </Adjustment>
+  </AccountTypeAdjustments>
+
+  <!-- Category Specific SLA Adjustments -->
+  <CategoryAdjustments>
+    <!-- Technical Support Adjustments -->
+    <Adjustment Category="Technical" Name="Technical Support Rules">
+      <RequiredSkills>
+        <Skill>Technical Support</Skill>
+        <Skill>Product Knowledge</Skill>
+      </RequiredSkills>
+      <AutoAssignment>TechnicalTeam</AutoAssignment>
+      <SpecialRules>
+        <Rule Name="RemoteSessionRequired" PriorityAdjustment="+1" />
+        <Rule Name="BugReport" RequiresDevTeam="true" />
+      </SpecialRules>
+    </Adjustment>
+
+    <!-- Billing Support Adjustments -->
+    <Adjustment Category="Billing" Name="Billing Support Rules">
+      <RequiredSkills>
+        <Skill>Billing Support</Skill>
+      </RequiredSkills>
+      <AutoAssignment>BillingTeam</AutoAssignment>
+      <TimeAdjustments Factor="1.2"> <!-- 20% longer response for complex billing issues -->
+        <AffectedPriority>Medium,Low</AffectedPriority>
+      </TimeAdjustments>
+      <ComplianceRequirements>
+        <Requirement>GDPRCompliance</Requirement>
+        <Requirement>FinancialAuditTrail</Requirement>
+      </ComplianceRequirements>
+    </Adjustment>
+  </CategoryAdjustments>
+
+  <!-- Global SLA Settings -->
+  <GlobalSettings>
+    <!-- Business Hours Configuration -->
+    <BusinessHours>
+      <DefaultSchedule>
+        <Monday>09:00-18:00</Monday>
+        <Tuesday>09:00-18:00</Tuesday>
+        <Wednesday>09:00-18:00</Wednesday>
+        <Thursday>09:00-18:00</Thursday>
+        <Friday>09:00-18:00</Friday>
+        <Saturday>Closed</Saturday>
+        <Sunday>Closed</Sunday>
+      </DefaultSchedule>
+      <TimeZone>Pacific Standard Time</TimeZone>
+      <Holidays>
+        <Holiday Date="2024-01-01" Name="New Year's Day" />
+        <Holiday Date="2024-07-04" Name="Independence Day" />
+        <Holiday Date="2024-12-25" Name="Christmas Day" />
+        <!-- Add more holidays as needed -->
+      </Holidays>
+    </BusinessHours>
+
+    <!-- Notification Settings -->
+    <NotificationSettings>
+      <EmailSettings>
+        <SMTPServer>smtp.office365.com</SMTPServer>
+        <Port>587</Port>
+        <UseSSL>true</UseSSL>
+        <FromAddress>support@company.com</FromEmail>
+        <ReplyToAddress>no-reply@company.com</ReplyToAddress>
+      </EmailSettings>
+      <TeamsSettings>
+        <WebhookUrl>https://outlook.office.com/webhook/...</WebhookUrl>
+        <Channel>CRM-Alerts</Channel>
+      </TeamsSettings>
+    </NotificationSettings>
+
+    <!-- Escalation Settings -->
+    <EscalationSettings>
+      <DefaultEscalationTeam>
+        <Team Lead>teamlead@company.com</Team Lead>
+        <Manager>manager@company.com</Manager>
+        <Executive>executive@company.com</Executive>
+      </DefaultEscalationTeam>
+      <EscalationCooldown>
+        <MinimumInterval>1</MinimumInterval> <!-- Minimum 1 hour between escalations -->
+        <MaxEscalationsPerDay>3</MaxEscalationsPerDay>
+      </EscalationCooldown>
+    </EscalationSettings>
+
+    <!-- Monitoring and Reporting -->
+    <MonitoringSettings>
+      <RealTimeMonitoring>true</RealTimeMonitoring>
+      <BatchProcessing>
+        <IntervalMinutes>15</IntervalMinutes>
+        <BatchSize>100</BatchSize>
+      </BatchProcessing>
+      <Reporting>
+        <DailyReport>true</DailyReport>
+        <WeeklyReport>true</WeeklyReport>
+        <MonthlyReport>true</MonthlyReport>
+        <ReportRecipients>
+          <Recipient>crm-admin@company.com</Recipient>
+          <Recipient>teamlead@company.com</Recipient>
+        </ReportRecipients>
+      </Reporting>
+    </MonitoringSettings>
+
+    <!-- Performance Metrics -->
+    <PerformanceMetrics>
+      <TargetMetrics>
+        <Metric Name="FirstResponseSLACompliance" Target="95%" />
+        <Metric Name="ResolutionSLACompliance" Target="90%" />
+        <Metric Name="CustomerSatisfaction" Target="4.0" Scale="1-5" />
+        <Metric Name="TicketVolumePerAgent" Target="20-30" />
+      </TargetMetrics>
+      <CalculationMethods>
+        <Method Name="SLACompliance" Type="Percentage" Timeframe="Monthly" />
+        <Method Name="CustomerSatisfaction" Type="Average" Timeframe="Monthly" />
+        <Method Name="ResponseTime" Type="Average" Timeframe="Weekly" />
+        <Method Name="ResolutionTime" Type="Average" Timeframe="Weekly" />
+      </CalculationMethods>
+    </PerformanceMetrics>
+  </GlobalSettings>
+
+  <!-- SLA Templates for Easy Creation -->
+  <SLATemplates>
+    <Template ID="TEMPLATE-STANDARD" Name="Standard Support SLA">
+      <BasedOnRule>SLA-MEDIUM-DEFAULT</BasedOnRule>
+      <Description>Standard business hours support for regular customers</Description>
+      <Customizations>
+        <Setting Name="AfterHoursSupport" Value="false" />
+        <Setting Name="WeekendSupport" Value="false" />
+      </Customizations>
+    </Template>
+
+    <Template ID="TEMPLATE-PREMIUM" Name="Premium Support SLA">
+      <BasedOnRule>SLA-HIGH-DEFAULT</BasedOnRule>
+      <Description>Enhanced support for premium customers with faster response times</Description>
+      <Customizations>
+        <Setting Name="AfterHoursSupport" Value="true" />
+        <Setting Name="WeekendSupport" Value="limited" />
+        <Setting Name="DedicatedSupport" Value="true" />
+      </Customizations>
+    </Template>
+
+    <Template ID="TEMPLATE-ENTERPRISE" Name="Enterprise Support SLA">
+      <BasedOnRule>SLA-CRITICAL-DEFAULT</BasedOnRule>
+      <Description>24/7 priority support for enterprise customers</Description>
+      <Customizations>
+        <Setting Name="AfterHoursSupport" Value="true" />
+        <Setting Name="WeekendSupport" Value="true" />
+        <Setting Name="DedicatedSupport" Value="true" />
+        <Setting Name="ProactiveMonitoring" Value="true" />
+      </Customizations>
+    </Template>
+  </SLATemplates>
+</SLARules>
