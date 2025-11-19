@@ -107,19 +107,19 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ metrics, loading }) =
         <Shimmer
           width="60%"
           height={16}
-          shimmerElementType={ShimmerElementType.line}
+          shimmerElements={[{ type: ShimmerElementsType.line, width: "100%" }]}
           styles={{ root: { marginBottom: '8px' } }}
         />
         <Shimmer
           width="80%"
           height={32}
-          shimmerElementType={ShimmerElementType.line}
+          shimmerElements={[{ type: ShimmerElementsType.line, width: "100%" }]}
           styles={{ root: { marginBottom: '4px' } }}
         />
         <Shimmer
           width="40%"
           height={12}
-          shimmerElementType={ShimmerElementType.line}
+          shimmerElements={[{ type: ShimmerElementsType.line, width: "100%" }]}
         />
       </Stack>
     </div>
