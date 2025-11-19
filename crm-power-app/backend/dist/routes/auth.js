@@ -18,7 +18,7 @@ const generateToken = (user, role = 'Customer') => {
         role: role
     };
     const secret = process.env.JWT_SECRET || 'fallback-secret';
-    const options = { expiresIn: (process.env.JWT_EXPIRES_IN || '24h') };
+    const options = { expiresIn: process.env.JWT_EXPIRES_IN || '24h' };
     return jsonwebtoken_1.default.sign(payload, secret, options);
 };
 // Get Microsoft OAuth URL
