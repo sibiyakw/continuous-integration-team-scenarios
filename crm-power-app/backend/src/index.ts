@@ -10,6 +10,7 @@ import authRoutes from './routes/auth';
 import ticketsRoutes from './routes/tickets';
 import customersRoutes from './routes/customers';
 import agentsRoutes from './routes/agents';
+import analyticsRoutes from './routes/analytics';
 
 // Load environment variables
 dotenv.config();
