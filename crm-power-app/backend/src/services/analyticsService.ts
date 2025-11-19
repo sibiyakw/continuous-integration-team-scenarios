@@ -445,10 +445,12 @@ export class AnalyticsService {
         averageResolutionTime: 2.1,
         customerSatisfactionScore: 4.8,
         firstContactResolution: 100,
-        ticketVolume: [
-          { month: '2023-09', count: 1 },
-          { month: '2023-10', count: 2 }
-        ]
+        ticketVolume: {
+          monthly: [
+            { month: '2023-09', count: 1 },
+            { month: '2023-10', count: 2 }
+          ]
+        }
       }
     ];
   }
