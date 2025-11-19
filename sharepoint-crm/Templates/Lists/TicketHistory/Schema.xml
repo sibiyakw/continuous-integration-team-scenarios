@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<List xmlns:ows="Microsoft SharePoint" Title="CRM Ticket History" FolderCreation="FALSE" Direction="$Resources:Direction;" Url="Lists/TicketHistory" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x01">
+        <Folder TargetName="Item" />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0120" />
+    </ContentTypes>
+    <Fields>
+      <Field ID="{fa564e0f-0c70-4ab9-b863-0177e6ddd247}" Type="Text" Name="Title" DisplayName="Action Summary" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Title" MaxLength="255" />
+      <Field ID="{7c5b6d3e-4c4e-5d5f-8e9f-0a1b2c3d4e5f}" Type="Lookup" Name="TicketID" DisplayName="Ticket" List="Lists/Tickets" ShowField="Title" Required="TRUE" UnlimitedLengthInDocumentLibrary="FALSE" RelationshipDeleteBehavior="Cascade" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="TicketID" />
+      <Field ID="{8d6b7e4f-5d5f-6e6g-9f0a-1b2c3d4e5f6g}" Type="Choice" Name="ActionType" DisplayName="Action Type" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="ActionType" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Created</CHOICE>
+          <CHOICE>Status Changed</CHOICE>
+          <CHOICE>Assigned</CHOICE>
+          <CHOICE>Reassigned</CHOICE>
+          <CHOICE>Comment Added</CHOICE>
+          <CHOICE>Customer Contact</CHOICE>
+          <CHOICE>Resolution Attempt</CHOICE>
+          <CHOICE>Escalated</CHOICE>
+          <CHOICE>Resolved</CHOICE>
+          <CHOICE>Closed</CHOICE>
+          <CHOICE>Reopened</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{9e7c8f5g-6e6g-7f7h-0a1b-2c3d4e5f6g7h}" Type="User" Name="ActionedBy" DisplayName="Actioned By" List="UserInfo" ShowField="ImnName" Required="TRUE" UserSelectionMode="1" UserSelectionScope="0" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="ActionedBy" />
+      <Field ID="{af8d9h6h-7f7h-8g8i-1b2c-3d4e5f6g7h8i}" Type="Note" Name="Description" DisplayName="Description" Required="FALSE" NumLines="6" RichText="FALSE" Sortable="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Description" />
+      <Field ID="{b09eai7i-8g8i-9h9j-2c3d-4e5f6g7h8i9j}" Type="Note" Name="PreviousValue" DisplayName="Previous Value" Required="FALSE" NumLines="3" RichText="FALSE" Sortable="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="PreviousValue" />
+      <Field ID="{c1afj8j-9h9j-0i0k-3d4e-5f6g7h8i9j0k}" Type="Note" Name="NewValue" DisplayName="New Value" Required="FALSE" NumLines="3" RichText="FALSE" Sortable="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="NewValue" />
+      <Field ID="{d2bg0k9k-0i0k-1j1l-4e5f-6g7h8i9j0k1l}" Type="DateTime" Name="ActionDate" DisplayName="Action Date" Required="TRUE" Format="DateTime" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="ActionDate" ReadOnly="TRUE" />
+      <Field ID="{e3ch1l0l-1j1l-2k2m-5f6g-7h8i9j0k1l2m}" Type="Choice" Name="Visibility" DisplayName="Visibility" Required="TRUE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Visibility" Format="Dropdown" FillInChoice="FALSE">
+        <CHOICES>
+          <CHOICE>Internal</CHOICE>
+          <CHOICE>Customer Visible</CHOICE>
+          <CHOICE>Public</CHOICE>
+        </CHOICES>
+        <Default>Internal</Default>
+      </Field>
+      <Field ID="{f4di2m1m-2k2m-3l3n-6g7h-8i9j0k1l2m3n}" Type="Boolean" Name="IsSystemGenerated" DisplayName="System Generated" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="IsSystemGenerated">
+        <Default>0</Default>
+      </Field>
+      <Field ID="{05ej3n2n-3l3n-4m4o-7h8i-9j0k1l2m3n4o}" Type="Text" Name="FieldName" DisplayName="Field Name" Required="FALSE" MaxLength="100" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="FieldName" />
+      <Field ID="{16fk4o3o-4m4o-5n5p-8i9j-0k1l2m3n4o5p}" Type="Number" Name="TimeSpent" DisplayName="Time Spent (Minutes)" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="TimeSpent" Min="0" />
+      <Field ID="{27gl5p4p-5n5p-6o6q-9j0k-1l2m3n4o5p6q}" Type="Note" Name="Attachments" DisplayName="Attachments" Required="FALSE" NumLines="2" RichText="FALSE" Sortable="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Attachments" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="All History" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="AllItems.aspx">
+        <ViewFields>
+          <FieldRef Name="TicketID" />
+          <FieldRef Name="Title" />
+          <FieldRef Name="ActionType" />
+          <FieldRef Name="ActionedBy" />
+          <FieldRef Name="ActionDate" />
+          <FieldRef Name="Visibility" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">50</RowLimit>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="ActionDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="2" Type="HTML" WebPartZoneID="Main" DisplayName="Customer Visible" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="CustomerVisible.aspx">
+        <ViewFields>
+          <FieldRef Name="TicketID" />
+          <FieldRef Name="Title" />
+          <FieldRef Name="ActionType" />
+          <FieldRef Name="ActionedBy" />
+          <FieldRef Name="ActionDate" />
+          <FieldRef Name="Description" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">50</RowLimit>
+        <Query>
+          <Where>
+            <Or>
+              <Eq>
+                <FieldRef Name="Visibility" />
+                <Value Type="Text">Customer Visible</Value>
+              </Eq>
+              <Eq>
+                <FieldRef Name="Visibility" />
+                <Value Type="Text">Public</Value>
+              </Eq>
+            </Or>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="ActionDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+      </View>
+      <View BaseViewID="3" Type="HTML" WebPartZoneID="Main" DisplayName="By Ticket" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="ByTicket.aspx">
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="ActionType" />
+          <FieldRef Name="ActionedBy" />
+          <FieldRef Name="ActionDate" />
+          <FieldRef Name="Visibility" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">50</RowLimit>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="TicketID" />
+            <FieldRef Name="ActionDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+        <GroupBy Collapse="TRUE" GroupLimit="50">
+          <FieldRef Name="TicketID" />
+        </GroupBy>
+      </View>
+      <View BaseViewID="4" Type="HTML" WebPartZoneID="Main" DisplayName="Recent Activity" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/15/images/generic.png?rev=47" Url="RecentActivity.aspx">
+        <ViewFields>
+          <FieldRef Name="TicketID" />
+          <FieldRef Name="Title" />
+          <FieldRef Name="ActionType" />
+          <FieldRef Name="ActionedBy" />
+          <FieldRef Name="ActionDate" />
+        </ViewFields>
+        <RowLimit Paged="TRUE">25</RowLimit>
+        <Query>
+          <Where>
+            <Geq>
+              <FieldRef Name="ActionDate" />
+              <Value Type="DateTime">
+                <Today OffsetDays="-7" />
+              </Value>
+            </Geq>
+          </Where>
+          <OrderBy>
+            <FieldRef Name="ActionDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="NewForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>
